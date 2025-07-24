@@ -47,18 +47,20 @@ def send_control_frame(bus, device_id, mode, setpoint):
     msg = can.Message(arbitration_id=can_id, data=data, is_extended_id=True)
     try:
         bus.send(msg)
-        print(f"Sent control frame: ID=0x{can_id:X}, data={list(data)}")
+        #print(f"Sent control frame: ID=0x{can_id:X}, data={list(data)}")
     except can.CanError as e:
-        print(f"Control frame send failed: {e}")
+        pass
+        #print(f"Control frame send failed: {e}")
 
 def send_heartbeat(bus):
     can_id = HEARTBEAT_ID | CAN_EFF_FLAG
     msg = can.Message(arbitration_id=can_id, data=HEARTBEAT_DATA, is_extended_id=True)
     try:
         bus.send(msg)
-        print(f"Sent heartbeat frame: ID=0x{can_id:X}")
+        #print(f"Sent heartbeat frame: ID=0x{can_id:X}")
     except can.CanError as e:
-        print(f"Heartbeat send failed: {e}")
+        pass
+        #print(f"Heartbeat send failed: {e}")
 
 def set_status_frame_period(bus, device_id, frame_id, period):
     can_id = (frame_id + device_id) | CAN_EFF_FLAG
@@ -66,14 +68,16 @@ def set_status_frame_period(bus, device_id, frame_id, period):
     msg = can.Message(arbitration_id=can_id, data=data, is_extended_id=True)
     try:
         bus.send(msg)
-        print(f"Set status frame period: ID=0x{can_id:X}, period={period}")
+        #print(f"Set status frame period: ID=0x{can_id:X}, period={period}")
     except can.CanError as e:
-        print(f"Status frame period send failed: {e}")
-
-def main():
+        pass
+        #print(f"Status frame period send failed: {e}")
+num_to_go = 0
+power = 0
+def do_main():
+    global num_to_go, power
     bus = can.interface.Bus(channel='can0', bustype='socketcan')
-    num_to_go = 0
-    power = 0
+    
     while True:
         send_heartbeat(bus)
         if num_to_go > 0:
@@ -81,15 +85,17 @@ def main():
         else:
           power = 0
         send_control_frame(bus, device_id=5, mode=ControlMode.Duty_Cycle_Set, setpoint=power)
-        if num_to_go <= 0:
-          num_to_go = float(input("Time: ")) / 0.02
-          power = float(input("Power: "))
+        
         time.sleep(0.02)
 
-
-try:
-    main()
-except KeyboardInterrupt:
-    print("Exiting.")
-finally:
-    os.system('sudo ifconfig can0 down')
+def do_it(time, p):
+    global num_to_go, power
+    num_to_go = time
+    power = p
+def main_loop():
+    try:
+        do_main()
+    except KeyboardInterrupt:
+        print("Exiting.")
+    finally:
+        os.system('sudo ifconfig can0 down')
