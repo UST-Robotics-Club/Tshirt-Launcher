@@ -38,10 +38,10 @@ for root, dirs, files in os.walk(local_base):
         sftp.put(local_file, remote_file)
 
 sftp.close()
+ssh.exec_command("sudo pkill robot_main.py\n")
 
 shell = ssh.invoke_shell(width=160, height = 80)
-shell.send("sudo pkill robot_main.py\n")
-time.sleep(0.5)
+
 shell.send("/home/ustrobotics/Documents/bin/python /home/ustrobotics/Documents/robot_main.py\n")
 
 while True:

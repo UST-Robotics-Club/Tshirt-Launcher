@@ -1,7 +1,7 @@
 html {
 	background-color:aliceblue;
 }
-#speed {
+#speed1, #speed2 {
 	width: 90vw;
 	height:100px;
 }
