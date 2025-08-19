@@ -3,8 +3,7 @@ import paramiko
 import time
 ssh = paramiko.SSHClient() 
 ssh.load_host_keys(os.path.expanduser(os.path.join("~", ".ssh", "known_hosts")))
-host = "10.3.141.1"
-#host = "169.254.15.253"
+
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 try:
     print("Trying wifi")
@@ -14,15 +13,17 @@ except:
     print("Trying ethernet")
     host = "169.254.15.253"
     ssh.connect(host, username="ustrobotics", password="ustrobotics2")
-
+ssh.exec_command("sudo pkill robot_main.py\n")
+time.sleep(1)
 sftp = ssh.open_sftp()
-local_base = "c:\\Users\\lukeb\\Documents\\Tshirt-Launcher"
+local_base = os.getcwd()
 remote_base = "/home/ustrobotics/Documents"
 
 for root, dirs, files in os.walk(local_base):
     if '.git' in dirs:
         dirs.remove('.git')
-
+    if '__pycache__' in dirs:
+        dirs.remove('__pycache__')
     rel_path = os.path.relpath(root, local_base)
     remote_path = os.path.join(remote_base, rel_path).replace("\\", "/")
 
@@ -38,14 +39,14 @@ for root, dirs, files in os.walk(local_base):
         sftp.put(local_file, remote_file)
 
 sftp.close()
-ssh.exec_command("sudo pkill robot_main.py\n")
+
 
 shell = ssh.invoke_shell(width=160, height = 80)
 
 shell.send("/home/ustrobotics/Documents/bin/python /home/ustrobotics/Documents/robot_main.py\n")
 
 while True:
-    d = shell.recv(100).decode()
+    d = shell.recv(300).decode()
     print(str(d), end='')
     if len(d) == 0:
         break

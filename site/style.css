@@ -1,11 +1,47 @@
-html {
-	background-color:aliceblue;
+html, body {
 }
+
 #speed1, #speed2 {
 	width: 90vw;
 	height:100px;
 }
-#tiltMode {
-	width: 200px;
+#enabled-group {
 	height: 200px;
+	width: 300px;
+	min-height: 100px;
+	min-width: fit-content;
+	font-size: 26px;
+}
+
+#disable-label {
+	font-size: inherit;
+	min-width: 0;
+	transform: min-width 0.5s;
+	--bs-btn-active-bg: rgb(155, 0, 0);
+}
+#enable-label {
+	font-size: inherit;
+	--bs-btn-active-bg: rgb(0, 155, 0);
+}
+
+.control-enabled #enabled-group {
+	height: 0;
+	width: 0;
+	font-size: 16px;
+	position: fixed;
+}
+.control-enabled #disable-label {
+	min-width: 200px;
+}
+.control-enabled #ping {
+	height: 15px;
+}
+.control-enabled .card-title {
+	display: none;
+}
+.control-enabled .card-body {
+	padding: 0;
+}
+.control-enabled #main-container {
+	margin-top: 0 !important;
 }

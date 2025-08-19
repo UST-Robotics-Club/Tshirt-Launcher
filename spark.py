@@ -1,9 +1,7 @@
 
 
-import os
 import can
 import struct
-import time
 
 # Constants
 CONTROL_SIZE = 8
@@ -39,8 +37,8 @@ class Spark:
     def __init__(self, can_id):
         self.can_id = can_id
     
-    def set_bus(self, bus):
-        self.bus = bus
+    def set_manager(self, manager):
+        self.manager = manager
 
     def set_percent(self, percent):
         self.send_control_frame(ControlMode.Duty_Cycle_Set, percent)
@@ -50,7 +48,7 @@ class Spark:
         data = create_data(setpoint, 4, CONTROL_SIZE)
         msg = can.Message(arbitration_id=can_id, data=data, is_extended_id=True)
         try:
-            self.bus.send(msg)
+            self.manager.queue_message(msg)
             #print(f"Sent control frame: ID=0x{can_id:X}, data={list(data)}")
         except can.CanError as e:
             pass
@@ -59,7 +57,7 @@ class Spark:
         data = struct.pack('<H', period) + bytes(STATUS_SIZE - 2)
         msg = can.Message(arbitration_id=can_id, data=data, is_extended_id=True)
         try:
-            self.bus.send(msg)
+            self.manager.queue_message(msg)
             #print(f"Set status frame period: ID=0x{can_id:X}, period={period}")
         except can.CanError as e:
             pass

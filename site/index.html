@@ -6,24 +6,57 @@
     <title>T-Shirt!!</title>
     <meta name="viewport"
         content='width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover' />
+    <link rel='stylesheet' type='text/css' media='screen' href='bootstrap.css'>
     <link rel='stylesheet' type='text/css' media='screen' href='style.css'>
     <script src="./socket.io.min.js"></script>
+    <script src="./bootstrap.bundle.min.js"></script>
 
 </head>
 
 <body>
+    <div class="container-fluid mt-3" id="main-container">
+        <div class="row">
+            <div class="col">
+                <div class="card shadow-sm" id="control-card">
+                    <div class="card-body">
+                        <h3 class="card-title">Robot Control</h3>
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <div class="btn-group" id="enabled-group">
+                                    <input type="radio" class="btn-check" name="options" id="disable" autocomplete="off"
+                                        checked>
+                                    <label class="btn btn-secondary d-flex align-items-center justify-content-center"
+                                        id="disable-label" for="disable">Disabled</label>
 
+                                    <input type="radio" class="btn-check" name="options" id="enable" autocomplete="off">
+                                    <label class="btn btn-secondary d-flex align-items-center justify-content-center"
+                                        id="enable-label" for="enable">Enabled</label>
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <h5>Ping</h5>
+                                <pre id="ping"></pre>
+                            </div>
+                            <div class="col-sm-3">
+                                <h5>Pressure: 500</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <h1>Hello world</h1>
-	
-<input type="range" min="-100" max="100" class="form-rddange" id="speed1">
-<br>
-<br>
-<br>
-<br>
-<input type="range" min="-100" max="100" class="form-rddange" id="speed2">
 
-
-<script src='./main.js'></script>
+    <input type="range" min="-1000" max="1000" step="0.01" class="form-range" id="speed1">
+    <br>
+    <br>
+    <br>
+    <br>
+    <input type="range" min="-1000" max="1000" step="0.01" class="form-rddange" id="speed2">
+    <h1>Ping</h1>
+    
+    <script src='./main.js'></script>
 
 </body>
 
