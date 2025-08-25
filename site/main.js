@@ -31,7 +31,7 @@ let shootBtn = document.getElementById("shoot");
 let forwardBtn = document.getElementById("forward");
 let backwardBtn = document.getElementById("backward");
 let leftBtn = document.getElementById("left");
-let rightdBtn = document.getElementById("right");
+let rightBtn = document.getElementById("right");
 let pingHistory = [];
 function doPing() {
     let start = Date.now();
