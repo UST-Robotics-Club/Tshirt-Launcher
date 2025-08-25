@@ -28,6 +28,10 @@ function handleOrientation(event) {
 let enableBtn = document.getElementById("enable");
 let disableBtn = document.getElementById("disable");
 let shootBtn = document.getElementById("shoot");
+let forwardBtn = document.getElementById("forward");
+let backwardBtn = document.getElementById("backward");
+let leftBtn = document.getElementById("left");
+let rightdBtn = document.getElementById("right");
 let pingHistory = [];
 function doPing() {
     let start = Date.now();
@@ -64,4 +68,36 @@ shootBtn.addEventListener("click", function (e) {
     e.preventDefault();
     socket.emit("shoot", 0.1);
     
+});
+forwardBtn.addEventListener("mousedown", function (e) {
+	e.preventDefault();
+	socket.emit("forward");
+});
+backwardBtn.addEventListener("mousedown", function (e) {
+	e.preventDefault();
+	socket.emit("backward");
+});
+leftBtn.addEventListener("mousedown", function (e) {
+	e.preventDefault();
+	socket.emit("left");
+});
+rightBtn.addEventListener("mousedown", function (e) {
+	e.preventDefault();
+	socket.emit("right");
+});
+forwardBtn.addEventListener("mouseup", function (e) {
+	e.preventDefault();
+	socket.emit("stop");
+});
+backwardBtn.addEventListener("mouseup", function (e) {
+	e.preventDefault();
+	socket.emit("stop");
+});
+leftBtn.addEventListener("mouseup", function (e) {
+	e.preventDefault();
+	socket.emit("stop");
+});
+rightBtn.addEventListener("mouseup", function (e) {
+	e.preventDefault();
+	socket.emit("stop");
 });

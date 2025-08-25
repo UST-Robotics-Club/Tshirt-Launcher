@@ -8,8 +8,16 @@ class TShirtBot:
         self.can_manager = get_can_manager()
         self.spark_one = Spark(5)
         self.spark_two = Spark(6)
+        self.front_left = Spark(10)
+        self.back_left = Spark(11)
+        self.front_right = Spark(12)
+        self.back_right = Spark(13)
         self.can_manager.add_device(self.spark_one)
         self.can_manager.add_device(self.spark_two)
+        self.can_manager.add_device(self.front_left)
+        self.can_manager.add_device(self.front_right)
+        self.can_manager.add_device(self.back_left)
+        self.can_manager.add_device(self.back_right)
         self.enabled = False
         self.last_ping = 0
         self.is_killed = False
@@ -34,6 +42,36 @@ class TShirtBot:
 
     def set_two(self, power):
         self.spark_two.set_percent(power)
+
+    def forward(self):
+        self.front_left.set_percent(50)
+        self.front_right.set_percent(50)
+        self.back_left.set_percent(50)
+        self.back_right.set_percent(50)
+
+    def backward(self):
+        self.front_left.set_percent(-50)
+        self.front_right.set_percent(-50)
+        self.back_left.set_percent(-50)
+        self.back_right.set_percent(-50)
+
+    def turn_left(self):
+        self.front_left.set_percent(-50)
+        self.front_right.set_percent(50)
+        self.back_left.set_percent(-50)
+        self.back_right.set_percent(50)
+
+    def turn_right(self):
+        self.front_left.set_percent(50)
+        self.front_right.set_percent(-50)
+        self.back_left.set_percent(50)
+        self.back_right.set_percent(-50)
+
+    def disable_drivetrain(self):
+        self.front_left.set_percent(0)
+        self.front_right.set_percent(0)
+        self.back_left.set_percent(0)
+        self.back_right.set_percent(0)
     
     def set_enabled(self, enabled):
         print("Enabled: ", enabled)
