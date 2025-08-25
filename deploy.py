@@ -1,8 +1,10 @@
 import os
 import paramiko
 import time
-ssh = paramiko.SSHClient() 
-ssh.load_host_keys(os.path.expanduser(os.path.join("~", ".ssh", "known_hosts")))
+ssh = paramiko.SSHClient()
+keypath = os.path.expanduser(os.path.join("~", ".ssh", "known_hosts"))
+if os.path.exists(keypath):
+    ssh.load_host_keys(keypath)
 
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 try:

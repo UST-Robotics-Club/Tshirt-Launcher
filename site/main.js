@@ -27,6 +27,7 @@ function handleOrientation(event) {
 }
 let enableBtn = document.getElementById("enable");
 let disableBtn = document.getElementById("disable");
+let shootBtn = document.getElementById("shoot");
 let pingHistory = [];
 function doPing() {
     let start = Date.now();
@@ -58,4 +59,9 @@ enableBtn.addEventListener("click", function (e) {
     e.preventDefault();
     socket.emit("enable");
     doPing();
+});
+shootBtn.addEventListener("click", function (e) {
+    e.preventDefault();
+    socket.emit("shoot", 0.1);
+    
 });

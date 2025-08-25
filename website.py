@@ -33,7 +33,12 @@ async def spin2(sid, req):
     if sid != current_driver: return
     print("spin2!", req)
     #robot.set_two(float(req) / 100.0)
-
+@sio.event
+async def shoot(sid, sec):
+    if sid != current_driver: return
+    print("shoot!", sec)
+    robot.pulse_shoot(sec)
+    #robot.set_two(float(req) / 100.0)
 @sio.event
 async def ping(sid):
     global current_driver
