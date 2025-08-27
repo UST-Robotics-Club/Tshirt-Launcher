@@ -47,7 +47,7 @@ async def forward(sid):
     print("Drive Forward!")
     robot.forward()
 @sio.event
-async def reverse(sid):
+async def backward(sid):
     if sid != current_driver: return
     print("Drive Backward!")
     robot.backward()

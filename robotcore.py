@@ -44,28 +44,29 @@ class TShirtBot:
         self.spark_two.set_percent(power)
 
     def forward(self):
-        self.front_left.set_percent(.5)
-        self.front_right.set_percent(.5)
-        self.back_left.set_percent(.5)
-        self.back_right.set_percent(.5)
+        self.front_left.set_percent(.1)
+        self.front_right.set_percent(-.1)
+        self.back_left.set_percent(.1)
+        print("I am going forwards")
+        self.back_right.set_percent(-.1)
 
     def backward(self):
-        self.front_left.set_percent(-.5)
-        self.front_right.set_percent(-.5)
-        self.back_left.set_percent(-.5)
-        self.back_right.set_percent(-.5)
+        self.front_left.set_percent(-.1)
+        self.front_right.set_percent(.1)
+        self.back_left.set_percent(-.1)
+        self.back_right.set_percent(.1)
 
     def turn_left(self):
-        self.front_left.set_percent(-.5)
-        self.front_right.set_percent(.5)
-        self.back_left.set_percent(-.5)
-        self.back_right.set_percent(.5)
+        self.front_left.set_percent(-.1)
+        self.front_right.set_percent(-.1)
+        self.back_left.set_percent(-.1)
+        self.back_right.set_percent(-.1)
 
     def turn_right(self):
-        self.front_left.set_percent(.5)
-        self.front_right.set_percent(-.5)
-        self.back_left.set_percent(.5)
-        self.back_right.set_percent(-.5)
+        self.front_left.set_percent(.1)
+        self.front_right.set_percent(.1)
+        self.back_left.set_percent(.1)
+        self.back_right.set_percent(.1)
 
     def disable_drivetrain(self):
         self.front_left.set_percent(0)
