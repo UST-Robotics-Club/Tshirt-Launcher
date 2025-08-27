@@ -44,7 +44,6 @@ class TShirtBot:
         self.spark_two.set_percent(power)
 
     def forward(self):
-<<<<<<< Updated upstream
         self.front_left.set_percent(.1)
         self.front_right.set_percent(-.1)
         self.back_left.set_percent(.1)
@@ -68,31 +67,6 @@ class TShirtBot:
         self.front_right.set_percent(.1)
         self.back_left.set_percent(.1)
         self.back_right.set_percent(.1)
-=======
-        self.front_left.set_percent(-.5)
-        self.front_right.set_percent(.5)
-        self.back_left.set_percent(-.5)
-        self.back_right.set_percent(.5)
-
-    def backward(self):
-        self.front_left.set_percent(.5)
-        self.front_right.set_percent(-.5)
-        self.back_left.set_percent(.5)
-        self.back_right.set_percent(-.5)
->>>>>>> Stashed changes
-
-    def turn_left(self):
-        self.front_left.set_percent(.5)
-        self.front_right.set_percent(.5)
-        self.back_left.set_percent(.5)
-        self.back_right.set_percent(.5)
-
-    def turn_right(self):
-        self.front_left.set_percent(-.5)
-        self.front_right.set_percent(-.5)
-        self.back_left.set_percent(-.5)
-        self.back_right.set_percent(-.5)
-
     def disable_drivetrain(self):
         self.front_left.set_percent(0)
         self.front_right.set_percent(0)
