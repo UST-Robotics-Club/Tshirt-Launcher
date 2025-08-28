@@ -22,7 +22,6 @@ class TShirtBot:
         self.last_ping = 0
         self.is_killed = False
         self.time_end_shoot = 0
-        self.relay = gpiozero.LED(27)
 
     def kill_thread(self):
         self.can_manager.stop_bus()
@@ -84,13 +83,7 @@ class TShirtBot:
         now = time.time()
         if now - self.last_ping > 1 and self.enabled:
             self.set_enabled(False)
-        if now <= self.time_end_shoot:
-            #print("on")
-            self.relay.on()
-        else:
-            #print("off")
 
-            self.relay.off()
         time.sleep(0.02)
     
     def main_loop(self):

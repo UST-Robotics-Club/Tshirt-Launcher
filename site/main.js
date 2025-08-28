@@ -73,59 +73,59 @@ shootBtn.addEventListener("click", function (e) {
     
 });
 forwardBtn.addEventListener("mousedown", function (e) {
-	e.preventDefault();
-	socket.emit("forward");
+    e.preventDefault();
+    socket.emit("forward");
 });
 backwardBtn.addEventListener("mousedown", function (e) {
-	e.preventDefault();
-	socket.emit("backward");
+    e.preventDefault();
+    socket.emit("backward");
 });
 leftBtn.addEventListener("mousedown", function (e) {
-	e.preventDefault();
-	socket.emit("left");
+    e.preventDefault();
+    socket.emit("left");
 });
 rightBtn.addEventListener("mousedown", function (e) {
-	e.preventDefault();
-	socket.emit("right");
+    e.preventDefault();
+    socket.emit("right");
 });
 forwardBtn.addEventListener("mouseup", function (e) {
-	e.preventDefault();
-	socket.emit("stop");
+    e.preventDefault();
+    socket.emit("stop");
 });
 backwardBtn.addEventListener("mouseup", function (e) {
-	e.preventDefault();
-	socket.emit("stop");
+    e.preventDefault();
+    socket.emit("stop");
 });
 leftBtn.addEventListener("mouseup", function (e) {
-	e.preventDefault();
-	socket.emit("stop");
+    e.preventDefault();
+    socket.emit("stop");
 });
 rightBtn.addEventListener("mouseup", function (e) {
-	e.preventDefault();
-	socket.emit("stop");
+    e.preventDefault();
+    socket.emit("stop");
 });
-rotateBtn.addEventListener("click", function (e) {
-	e.preventDefault();
-	socket.emit("rotateBarrels");
+rotateBtn.addEventListener("mousedown", function (e) {
+    e.preventDefault();
+    socket.emit("rotateBarrels");
 });
 tiltUpBtn.addEventListener("mousedown", function (e) {
-	e.preventDefault();
-	socket.emit("tiltUp");
+    e.preventDefault();
+    socket.emit("tiltUp");
 });
 tiltDownBtn.addEventListener("mousedown", function (e) {
-	e.preventDefault();
-	socket.emit("tiltDown");
+    e.preventDefault();
+    socket.emit("tiltDown");
 });
 rotateBtn.addEventListener("mouseup", function (e) {
-	e.preventDefault();
-	socket.emit("stopTurret");
+    e.preventDefault();
+    socket.emit("stopTurret");
 });
 tiltUpBtn.addEventListener("mouseup", function (e) {
-	e.preventDefault();
-	socket.emit("stopTurret");
+    e.preventDefault();
+    socket.emit("stopTurret");
 });
 tiltDownBtn.addEventListener("mouseup", function (e) {
-	e.preventDefault();
-	socket.emit("stopTurret");
+    e.preventDefault();
+    socket.emit("stopTurret");
 });
 
