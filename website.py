@@ -22,18 +22,6 @@ async def disconnect(sid):
     print(f"Client disconnected: {sid}")
 
 @sio.event
-async def spin1(sid, req):
-    if sid != current_driver: return
-    print("spin1!", req)
-    robot.set_one(float(req) / 100.0)
-    robot.set_two(float(req) / 100.0)
-
-@sio.event
-async def spin2(sid, req):
-    if sid != current_driver: return
-    print("spin2!", req)
-    #robot.set_two(float(req) / 100.0)
-@sio.event
 async def shoot(sid, sec):
     if sid != current_driver: return
     print("shoot!", sec)
@@ -66,6 +54,26 @@ async def stop(sid):
     if sid != current_driver: return
     print("Stop Driving!")
     robot.disable_drivetrain()
+@sio.event
+async def tiltUp(sid):
+    if sid!= current_driver: return
+    print("Tilting Up!")
+    robot.tilt_up()
+@sio.event
+async def tiltDown(sid):
+    if sid!= current_driver: return
+    print("Tilting Down!")
+    robot.tilt_down()
+@sio.event
+async def rotateBarrels(sid):
+    if sid != current_driver: return
+    print("Barrels Be Rotating!")
+    robot.rotate()
+@sio.event
+async def stopTurret(sid):
+    if sid != current_driver: return
+    print("Turret Stopped")
+    robot.stop_turret()
 
     
 @sio.event

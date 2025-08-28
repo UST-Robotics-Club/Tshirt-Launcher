@@ -6,14 +6,14 @@ import time
 class TShirtBot:
     def __init__(self):
         self.can_manager = get_can_manager()
-        self.spark_one = Spark(5)
-        self.spark_two = Spark(6)
+        self.rotate_barrel = Spark(5)
+        self.tilter = Spark(6)
         self.front_left = Spark(10)
         self.back_left = Spark(11)
         self.front_right = Spark(12)
         self.back_right = Spark(13)
-        self.can_manager.add_device(self.spark_one)
-        self.can_manager.add_device(self.spark_two)
+        self.can_manager.add_device(self.rotate_barrel)
+        self.can_manager.add_device(self.tilter)
         self.can_manager.add_device(self.front_left)
         self.can_manager.add_device(self.front_right)
         self.can_manager.add_device(self.back_left)
@@ -30,18 +30,7 @@ class TShirtBot:
 
     def refresh_ping(self):
         self.last_ping = time.time()
-  
-    def set_both(self, one, two):
-        self.spark_one.set_percent(one)
-        self.spark_two.set_percent(two)
-    
-    def pulse_shoot(self, sec):
-        self.time_end_shoot = time.time() + sec
-    def set_one(self, power):
-        self.spark_one.set_percent(power)
 
-    def set_two(self, power):
-        self.spark_two.set_percent(power)
 
     def forward(self):
         self.front_left.set_percent(.1)
@@ -72,7 +61,17 @@ class TShirtBot:
         self.front_right.set_percent(0)
         self.back_left.set_percent(0)
         self.back_right.set_percent(0)
-    
+
+    def tilt_up(self):
+        self.tilter.set_percent(.1)
+    def tilt_down(self):
+        self.tilter.set_percent(-.1)
+    def rotate(self):
+        self.rotate_barrel.set_percent(.1)
+    def stop_turret(self):
+        self.rotate_barrel.set_percent(0)
+        self.tilter.set_percent(0)
+
     def set_enabled(self, enabled):
         print("Enabled: ", enabled)
         self.enabled = enabled

@@ -32,6 +32,9 @@ let forwardBtn = document.getElementById("forward");
 let backwardBtn = document.getElementById("backward");
 let leftBtn = document.getElementById("left");
 let rightBtn = document.getElementById("right");
+let tiltUpBtn = document.getElementById("tilt_up");
+let tiltDownBtn = document.getElementById("tilt_down");
+let rotateBtn = document.getElementById("rotate");
 let pingHistory = [];
 function doPing() {
     let start = Date.now();
@@ -101,3 +104,28 @@ rightBtn.addEventListener("mouseup", function (e) {
 	e.preventDefault();
 	socket.emit("stop");
 });
+rotateBtn.addEventListener("click", function (e) {
+	e.preventDefault();
+	socket.emit("rotateBarrels");
+});
+tiltUpBtn.addEventListener("mousedown", function (e) {
+	e.preventDefault();
+	socket.emit("tiltUp");
+});
+tiltDownBtn.addEventListener("mousedown", function (e) {
+	e.preventDefault();
+	socket.emit("tiltDown");
+});
+rotateBtn.addEventListener("mouseup", function (e) {
+	e.preventDefault();
+	socket.emit("stopTurret");
+});
+tiltUpBtn.addEventListener("mouseup", function (e) {
+	e.preventDefault();
+	socket.emit("stopTurret");
+});
+tiltDownBtn.addEventListener("mouseup", function (e) {
+	e.preventDefault();
+	socket.emit("stopTurret");
+});
+
