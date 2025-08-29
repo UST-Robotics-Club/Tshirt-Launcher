@@ -6,8 +6,8 @@ import time
 class TShirtBot:
     def __init__(self):
         self.can_manager = get_can_manager()
-        self.rotate_barrel = Spark(5)
-        self.tilter = Spark(6)
+        self.rotate_barrel = Spark(6)
+        self.tilter = Spark(5)
         self.front_left = Spark(10)
         self.back_left = Spark(11)
         self.front_right = Spark(12)
@@ -70,6 +70,8 @@ class TShirtBot:
     def stop_turret(self):
         self.rotate_barrel.set_percent(0)
         self.tilter.set_percent(0)
+    def hold(self):
+        self.tilter.set_percent(.05)
 
     def set_enabled(self, enabled):
         print("Enabled: ", enabled)

@@ -75,6 +75,12 @@ async def stopTurret(sid):
     print("Turret Stopped")
     robot.stop_turret()
 
+@sio.event
+async def hold(sid):
+    if sid != current_driver: return
+    print("Holding Turret")
+    robot.hold()
+
     
 @sio.event
 async def ping(sid):
