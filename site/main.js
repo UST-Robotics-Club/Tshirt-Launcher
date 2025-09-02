@@ -1,5 +1,13 @@
 var socket = io();
 
+function pointerEventHandlers(element, onDown, onUp) {
+    element.addEventListener("pointerdown", function(e) {
+        element.setPointerCapture(e.pointerId);
+        return onDown(e);
+    });
+    element.addEventListener("pointerup", onUp);
+    element.addEventListener("pointercancel", onUp);
+}
 document.getElementById("speed1").addEventListener("input", function () {
     socket.emit("spin2", parseFloat(this.value) / 10.0)
 });
@@ -26,6 +34,8 @@ function handleOrientation(event) {
     socket.emit("spin", val);
 }
 let enableBtn = document.getElementById("enable");
+let enableBtnLabel = document.getElementById("enable-label");
+let disableBtnLabel = document.getElementById("disable-label");
 let disableBtn = document.getElementById("disable");
 let shootBtn = document.getElementById("shoot");
 let forwardBtn = document.getElementById("forward");
@@ -57,21 +67,31 @@ function doPing() {
 }
 setInterval(doPing, 750);
 
-disableBtn.addEventListener("click", function (e) {
-    e.preventDefault()
+disableBtnLabel.addEventListener("pointerdown", function (e) {
+    e.preventDefault();
     socket.emit("disable");
     doPing();
 });
-enableBtn.addEventListener("click", function (e) {
+enableBtnLabel.addEventListener("pointerdown", function (e) {
     e.preventDefault();
     socket.emit("enable");
     doPing();
 });
-shootBtn.addEventListener("click", function (e) {
+pointerEventHandlers(shootBtn, function(e) {
     e.preventDefault();
-    socket.emit("shoot", 0.1);
-    
+    if (document.getElementById("shoot-safety").checked) {
+        socket.emit("shoot", 0.1);
+    }
+}, function(e){
+    e.preventDefault();
+    if (document.getElementById("shoot-safety").checked) {
+        socket.emit("shoot", 0.0);
+    }
 });
+document.ondblclick = function(e) {
+    e.preventDefault();
+}
+
 forwardBtn.addEventListener("mousedown", function (e) {
     e.preventDefault();
     socket.emit("forward");
@@ -128,4 +148,28 @@ tiltDownBtn.addEventListener("mouseup", function (e) {
     e.preventDefault();
     socket.emit("stopTurret");
 });
-
+let joystickInner = document.getElementById("joystick-inner");
+let joystickOuter = document.getElementById("joystick-inner");
+let joystickId = false;
+pointerEventHandlers(joystickInner, function(e) {
+    e.preventDefault();
+    joystickId = e.pointerId;
+    joystickInner.style.position = "absolute";
+    joystickInner.style.left = e.pageX + "px";
+    joystickInner.style.top = e.pageY + "px";
+}, function(e) {
+    e.preventDefault();
+    if (e.pointerId === joystickId) {
+        joystickId = false;
+        joystickInner.style.position = "relative";
+        joystickInner.style.top = "60px";
+        joystickInner.style.left = "60px";
+    }
+});
+document.addEventListener("pointermove", function(e) {
+    if (e.pointerId === joystickId) {
+        e.preventDefault();
+        joystickInner.style.left = e.pageX + "px";
+        joystickInner.style.top = e.pageY + "px";
+    }
+});

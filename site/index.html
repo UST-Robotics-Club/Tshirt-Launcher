@@ -4,8 +4,7 @@
 <head>
     <meta charset='utf-8'>
     <title>T-Shirt!!</title>
-    <meta name="viewport"
-        content='width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover' />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1,user-scalable=0"/>
     <link rel='stylesheet' type='text/css' media='screen' href='bootstrap.css'>
     <link rel='stylesheet' type='text/css' media='screen' href='style.css'>
     <script src="./socket.io.min.js"></script>
@@ -21,7 +20,7 @@
                     <div class="card-body">
                         <h3 class="card-title">Robot Control</h3>
                         <div class="row">
-                            <div class="col-sm-6">
+                            <div class="col">
                                 <div class="btn-group" id="enabled-group">
                                     <input type="radio" class="btn-check" name="options" id="disable" autocomplete="off"
                                         checked>
@@ -33,11 +32,11 @@
                                         id="enable-label" for="enable">Enabled</label>
                                 </div>
                             </div>
-                            <div class="col-sm-3">
+                            <div class="col">
                                 <h5>Ping</h5>
                                 <pre id="ping"></pre>
                             </div>
-                            <div class="col-sm-3">
+                            <div class="col">
                                 <h5>Pressure: 500</h5>
                             </div>
                         </div>
@@ -45,32 +44,60 @@
                 </div>
             </div>
         </div>
+        <div class="row align-items-center" id="controls-row">
+            <div class="col-sm-6 p-0 m-0 d-flex justify-content-center">
+                <div id="joystick-outer" class="shadow">
+                    <div id="joystick-inner" class="shadow">
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 h-100 p-0 m-0 d-flex justify-content-center align-items-center position-relative">
+                
+                <button id="shoot" class="btn btn-primary shadow">
+                    Launch
+                </button>
+                <div class="form-check form-switch" id="shoot-safety-box">
+                    <input class="form-check-input" type="checkbox" role="switch" id="shoot-safety">
+                    <label class="form-check-label ms-1" for="shoot-safety">Enabled</label>
+                </div>
+                <div id="updown-box">
+                    <button id="tilt-up" class="d-block btn btn-primary adjust-btn">&uparrow;</button>
+                    <div id="tilt-text">1900</div>
+                    <button id="tilt-down" class="d-block btn btn-primary adjust-btn">&downarrow;</button>
+                </div>
+                <div id="leftright-box">
+                    <button id="turret-left" class="btn btn-primary adjust-btn">&larr;</button>
+                    <div id="rotate-text">2000</div>
+                    <button id="turret-right" class="btn btn-primary adjust-btn">&rarr;</button>
+                </div>
+            </div>
+        </div>
     </div>
-    <br>
-    <br>
-    <input type="range" min="-1000" max="1000" step="0.01" class="form-range d-none" id="speed1">
-    <button class="btn btn-primary" id="shoot">Shoot</button>
-    <button class="btn btn-primary" id="forward">Forward</button>
-    <br>
-    <br>
-    <button class="btn btn-primary" id="left">Left</button>
-    <button class="btn btn-primary" id="backward">Backward</button>
-    <button class="btn btn-primary" id="right">Right</button>
-    <br>
-    <br>
-    <button class="btn btn-primary" id="tilt_up">Tilt Up</button>
-    <br>
-    <br>
-    <button class="btn btn-primary" id="tilt_down">Tilt Down</button>
-    <br>
-    <br>
-    <br>
-    <button class="btn btn-primary" id="rotate">Rotate Barrels</button>
-    <br>
-    <br>
-    <br>
-    <input type="range" min="-1000" max="1000" step="0.01" class="form-rddange" id="speed2">
-    
+    <div class="d-none">
+        <br>
+        <br>
+        <input type="range" min="-1000" max="1000" step="0.01" class="form-range d-none" id="speed1">
+        <button class="btn btn-primary" id="forward">Forward</button>
+        <br>
+        <br>
+        <button class="btn btn-primary" id="left">Left</button>
+        <button class="btn btn-primary" id="backward">Backward</button>
+        <button class="btn btn-primary" id="right">Right</button>
+        <br>
+        <br>
+        <button class="btn btn-primary" id="tilt_up">Tilt Up</button>
+        <br>
+        <br>
+        <button class="btn btn-primary" id="tilt_down">Tilt Down</button>
+        <br>
+        <br>
+        <br>
+        <button class="btn btn-primary" id="rotate">Rotate Barrels</button>
+        <br>
+        <br>
+        <br>
+        <input type="range" min="-1000" max="1000" step="0.01" class="form-rddange" id="speed2">
+    </div>
     <script src='./main.js'></script>
 
 </body>

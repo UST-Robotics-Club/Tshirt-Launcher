@@ -49,6 +49,7 @@ async def right(sid):
     if sid != current_driver: return
     print("Turn Right!")
     robot.turn_right()
+
 @sio.event
 async def stop(sid):
     if sid != current_driver: return
