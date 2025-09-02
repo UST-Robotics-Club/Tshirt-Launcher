@@ -45,6 +45,7 @@ let rightBtn = document.getElementById("right");
 let tiltUpBtn = document.getElementById("tilt_up");
 let tiltDownBtn = document.getElementById("tilt_down");
 let rotateBtn = document.getElementById("rotate");
+let holdTurretBtn = document.getElementById("hold");
 let pingHistory = [];
 function doPing() {
     let start = Date.now();
@@ -76,6 +77,11 @@ enableBtnLabel.addEventListener("pointerdown", function (e) {
     e.preventDefault();
     socket.emit("enable");
     doPing();
+});
+holdTurretBtn.addEventListener("click", function (e){
+    e.preventDefault();
+    console.log("hold turrent event listener");
+    socket.emit("hold");
 });
 pointerEventHandlers(shootBtn, function(e) {
     e.preventDefault();
