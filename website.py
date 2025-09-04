@@ -49,12 +49,17 @@ async def right(sid):
     if sid != current_driver: return
     print("Turn Right!")
     robot.turn_right()
+@sio.event
+async def drive(sid, forward, rotate):
+    if sid != current_driver: return
+    robot.drive(forward, rotate)
 
 @sio.event
 async def stop(sid):
     if sid != current_driver: return
     print("Stop Driving!")
-    robot.disable_drivetrain()
+    robot.drive(0, 0)
+    
 @sio.event
 async def tiltUp(sid):
     if sid!= current_driver: return

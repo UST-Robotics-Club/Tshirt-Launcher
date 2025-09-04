@@ -8,6 +8,10 @@ function pointerEventHandlers(element, onDown, onUp) {
     element.addEventListener("pointerup", onUp);
     element.addEventListener("pointercancel", onUp);
 }
+
+function clamp(x, min, max) {
+    return Math.min(max, Math.max(min, x));
+}
 document.getElementById("speed1").addEventListener("input", function () {
     socket.emit("spin2", parseFloat(this.value) / 10.0)
 });
@@ -42,8 +46,8 @@ let forwardBtn = document.getElementById("forward");
 let backwardBtn = document.getElementById("backward");
 let leftBtn = document.getElementById("left");
 let rightBtn = document.getElementById("right");
-let tiltUpBtn = document.getElementById("tilt_up");
-let tiltDownBtn = document.getElementById("tilt_down");
+let tiltUpBtn = document.getElementById("tilt-up");
+let tiltDownBtn = document.getElementById("tilt-down");
 let rotateBtn = document.getElementById("rotate");
 let holdTurretBtn = document.getElementById("hold");
 let pingHistory = [];
@@ -94,6 +98,20 @@ pointerEventHandlers(shootBtn, function(e) {
         socket.emit("shoot", 0.0);
     }
 });
+pointerEventHandlers(tiltUpBtn, function(e) {
+    e.preventDefault();
+    socket.emit("tiltUp");
+}, function(e){
+    e.preventDefault();
+    socket.emit("stopTurret");
+});
+pointerEventHandlers(tiltDownBtn, function(e) {
+    e.preventDefault();
+    socket.emit("tiltDown");
+}, function(e){
+    e.preventDefault();
+    socket.emit("stopTurret");
+});
 document.ondblclick = function(e) {
     e.preventDefault();
 }
@@ -134,35 +152,23 @@ rotateBtn.addEventListener("mousedown", function (e) {
     e.preventDefault();
     socket.emit("rotateBarrels");
 });
-tiltUpBtn.addEventListener("mousedown", function (e) {
-    e.preventDefault();
-    socket.emit("tiltUp");
-});
-tiltDownBtn.addEventListener("mousedown", function (e) {
-    e.preventDefault();
-    socket.emit("tiltDown");
-});
+
 rotateBtn.addEventListener("mouseup", function (e) {
     e.preventDefault();
     socket.emit("stopTurret");
 });
-tiltUpBtn.addEventListener("mouseup", function (e) {
-    e.preventDefault();
-    socket.emit("stopTurret");
-});
-tiltDownBtn.addEventListener("mouseup", function (e) {
-    e.preventDefault();
-    socket.emit("stopTurret");
-});
+
 let joystickInner = document.getElementById("joystick-inner");
-let joystickOuter = document.getElementById("joystick-inner");
+let joystickOuter = document.getElementById("joystick-outer");
+let driveControlSection = document.getElementById("drive-controls");
 let joystickId = false;
 pointerEventHandlers(joystickInner, function(e) {
     e.preventDefault();
     joystickId = e.pointerId;
+    let driveControlRect = driveControlSection.getBoundingClientRect();
     joystickInner.style.position = "absolute";
-    joystickInner.style.left = e.pageX + "px";
-    joystickInner.style.top = e.pageY + "px";
+    joystickInner.style.left = -37 + driveControlRect.width / 2 + driveControlRect.left + "px";
+    joystickInner.style.top = e.pageY - driveControlRect.top + "px";
 }, function(e) {
     e.preventDefault();
     if (e.pointerId === joystickId) {
@@ -170,12 +176,35 @@ pointerEventHandlers(joystickInner, function(e) {
         joystickInner.style.position = "relative";
         joystickInner.style.top = "60px";
         joystickInner.style.left = "60px";
+        socket.emit("drive", 0, 0);
     }
 });
 document.addEventListener("pointermove", function(e) {
     if (e.pointerId === joystickId) {
         e.preventDefault();
-        joystickInner.style.left = e.pageX + "px";
-        joystickInner.style.top = e.pageY + "px";
+
+
+        let fromRect = joystickOuter.getBoundingClientRect();
+        let driveControlRect = driveControlSection.getBoundingClientRect();
+
+        // Center of the outer element
+        let cx = fromRect.left + fromRect.width / 2 + window.scrollX;
+        let cy = fromRect.top + fromRect.height / 2 + window.scrollY;
+        const maxDist = 75;
+        let dy = e.pageY - cy;
+        let dx = e.pageX - cx;
+
+        dy = clamp(dy, -maxDist, maxDist);
+        dx = clamp(dx, -0, 0);
+
+        // Constrain to within maxDist px of the center
+        innerJoystickCenterX = cx + dx;
+        innerJoystickCenterY = cy + dy;
+
+        joystickInner.style.left = innerJoystickCenterX - driveControlRect.left + "px";
+        joystickInner.style.top = innerJoystickCenterY - driveControlRect.top + "px";
+
+        let throttle = (document.getElementById("throttle").value / 100);
+        socket.emit("drive", -Math.pow(dy / maxDist, 2) * throttle * Math.sign(dy), Math.pow(dx / maxDist, 2) * throttle * Math.sign(dx));
     }
 });

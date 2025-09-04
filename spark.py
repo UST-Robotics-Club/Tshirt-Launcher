@@ -2,6 +2,8 @@
 
 import can
 import struct
+import time
+from canmanager import CanDevice, DecodedCanPacket
 
 # Constants
 CONTROL_SIZE = 8
@@ -33,9 +35,18 @@ def create_data(data, data_size, total_size):
     frame[:len(raw)] = raw
     return frame
 
-class Spark:
+class SparkMax(CanDevice):
     def __init__(self, can_id):
         self.can_id = can_id
+        self.encoder_position = 0
+        self.last_time_recieved = 0
+    
+    def get_can_id(self):
+        return self.can_id
+    
+    def handle_packet(self, msg: DecodedCanPacket):
+        self.last_time_recieved = time.time()
+        print(str(msg))
     
     def set_manager(self, manager):
         self.manager = manager
@@ -52,6 +63,7 @@ class Spark:
             #print(f"Sent control frame: ID=0x{can_id:X}, data={list(data)}")
         except can.CanError as e:
             pass
+        
     def set_status_frame_period(self, frame_id, period):
         can_id = (frame_id + self.can_id) | CAN_EFF_FLAG
         data = struct.pack('<H', period) + bytes(STATUS_SIZE - 2)

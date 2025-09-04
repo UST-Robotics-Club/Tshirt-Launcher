@@ -45,13 +45,14 @@
             </div>
         </div>
         <div class="row align-items-center" id="controls-row">
-            <div class="col-sm-6 p-0 m-0 d-flex justify-content-center">
+            <div class="col-sm-6 p-0 m-0 d-flex justify-content-center align-items-center position-relative h-100 card" id="drive-controls">
                 <div id="joystick-outer" class="shadow">
                     <div id="joystick-inner" class="shadow">
                     </div>
                 </div>
+                <input type="range" min="0" max="100" step="1" class="form-range" id="throttle">
             </div>
-            <div class="col-sm-6 h-100 p-0 m-0 d-flex justify-content-center align-items-center position-relative">
+            <div class="col-sm-6 h-100 p-0 m-0 d-flex justify-content-center align-items-center position-relative card" id="turret-controls">
                 
                 <button id="shoot" class="btn btn-primary shadow">
                     Launch

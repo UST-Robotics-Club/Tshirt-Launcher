@@ -2,10 +2,10 @@ import os
 import paramiko
 import time
 ssh = paramiko.SSHClient()
-keypath = os.path.expanduser(os.path.join("~", ".ssh", "known_hosts"))
-if os.path.exists(keypath):
-    ssh.load_host_keys(keypath)
-
+try:
+    ssh.load_host_keys(os.path.expanduser(os.path.join("~", ".ssh", "known_hosts")))
+except:
+    pass
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 try:
     print("Trying wifi")
@@ -15,7 +15,7 @@ except:
     print("Trying ethernet")
     host = "169.254.15.253"
     ssh.connect(host, username="ustrobotics", password="ustrobotics2")
-ssh.exec_command("sudo pkill python")
+ssh.exec_command("sudo pkill robot_main.py\n")
 time.sleep(1)
 sftp = ssh.open_sftp()
 local_base = os.getcwd()

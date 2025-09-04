@@ -1,4 +1,4 @@
-from spark import Spark
+from spark import SparkMax
 from canmanager import *
 import gpiozero
 import time
@@ -6,12 +6,12 @@ import time
 class TShirtBot:
     def __init__(self):
         self.can_manager = get_can_manager()
-        self.rotate_barrel = Spark(6)
-        self.tilter = Spark(5)
-        self.front_left = Spark(10)
-        self.back_left = Spark(11)
-        self.front_right = Spark(12)
-        self.back_right = Spark(13)
+        self.rotate_barrel = SparkMax(6)
+        self.tilter = SparkMax(5)
+        self.front_left = SparkMax(15)
+        self.back_left = SparkMax(12)
+        self.front_right = SparkMax(11)
+        self.back_right = SparkMax(10)
         self.can_manager.add_device(self.rotate_barrel)
         self.can_manager.add_device(self.tilter)
         self.can_manager.add_device(self.front_left)
@@ -22,6 +22,8 @@ class TShirtBot:
         self.last_ping = 0
         self.is_killed = False
         self.time_end_shoot = 0
+        self.requested_left = 0
+        self.requested_right = 0
 
     def kill_thread(self):
         self.can_manager.stop_bus()
@@ -55,6 +57,20 @@ class TShirtBot:
         self.front_right.set_percent(.1)
         self.back_left.set_percent(.1)
         self.back_right.set_percent(.1)
+    def pulse_shoot(self, sec):
+        self.time_end_shoot = time.time() + sec
+    def drive(self, forward: float, counterclockwise: float):
+        right = forward - counterclockwise
+        left = forward + counterclockwise
+        if max(abs(right), abs(left)) > 1: # normalize if trying to go over 100%
+            norm_factor = 1 / max(abs(right), abs(left))
+            right *= norm_factor
+            left *= norm_factor
+        
+        # print("r", right, ", l", left)
+        self.requested_left = left
+        self.requested_right = right
+
     def disable_drivetrain(self):
         self.front_left.set_percent(0)
         self.front_right.set_percent(0)
@@ -62,9 +78,9 @@ class TShirtBot:
         self.back_right.set_percent(0)
 
     def tilt_up(self):
-        self.tilter.set_percent(.1)
+        self.tilter.set_percent(-0.1)
     def tilt_down(self):
-        self.tilter.set_percent(-.1)
+        self.tilter.set_percent(0.1)
     def rotate(self):
         self.rotate_barrel.set_percent(.1)
     def stop_turret(self):
@@ -85,12 +101,16 @@ class TShirtBot:
         now = time.time()
         if now - self.last_ping > 1 and self.enabled:
             self.set_enabled(False)
+        if self.enabled:
+            self.front_left.set_percent(self.requested_left)
+            self.back_left.set_percent(self.requested_left)
 
+            self.front_right.set_percent(-self.requested_right)
+            self.back_right.set_percent(-self.requested_right)
         time.sleep(0.02)
     
     def main_loop(self):
         self.can_manager.start_thread()
         while not self.is_killed:
             self.tick()
-            
         

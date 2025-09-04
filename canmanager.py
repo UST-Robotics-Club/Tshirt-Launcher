@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 import os, io
 import can
 import struct
@@ -10,14 +11,32 @@ HEARTBEAT_SIZE = 8
 HEARTBEAT_DATA = [255] * HEARTBEAT_SIZE
 CAN_EFF_FLAG = 0x80000000
 
+class DecodedCanPacket:
+    device_id: int
+    api_index: int
+    api_class: int
+    manuf_code: int
+    device_type: int
+    def __str__(self):
+        return f"dev {self.device_id} api_idx {hex(self.api_index)} api_class {hex(self.api_class)} manuf_code {hex(self.manuf_code)} device_type {hex(self.device_type)}"
+
+class CanDevice(ABC):
+    @abstractmethod
+    def get_can_id(self) -> int:
+        pass
+
+    @abstractmethod
+    def handle_packet(self, msg: DecodedCanPacket):
+        pass
+
 class CanManager:
     def __init__(self):
-        self.devices = {}
+        self.devices: dict[int, CanDevice] = {}
         self.bus = None
         self.is_killed = False
         self.write_queue: Queue[can.Message] = Queue()
-    def add_device(self, device):
-        self.devices[device.can_id] = device
+    def add_device(self, device: CanDevice):
+        self.devices[device.get_can_id()] = device
         device.set_manager(self)
 
     def queue_message(self, message: can.Message):
@@ -37,14 +56,17 @@ class CanManager:
             last = 0
             while not self.is_killed:
                 msg = self.bus.recv()
-                device_id =   (0b00000000000000000000000111111 & msg.arbitration_id)
-                api_index =   (0b00000000000000000001111000000 & msg.arbitration_id) >> 6
-                api_class =   (0b00000000000001111110000000000 & msg.arbitration_id) >> 10
-                manuf_code =  (0b00000111111110000000000000000 & msg.arbitration_id) >> 16
-                device_type =  (0b11111000000000000000000000000 & msg.arbitration_id) >> 24
+                decoded = DecodedCanPacket()
+                decoded.device_id =   (0b00000000000000000000000111111 & msg.arbitration_id)
+                decoded.api_index =   (0b00000000000000000001111000000 & msg.arbitration_id) >> 6
+                decoded.api_class =   (0b00000000000001111110000000000 & msg.arbitration_id) >> 10
+                decoded.manuf_code =  (0b00000111111110000000000000000 & msg.arbitration_id) >> 16
+                decoded.device_type =  (0b11111000000000000000000000000 & msg.arbitration_id) >> 24
+                if decoded.device_id in self.devices:
+                    self.devices[decoded.device_id].handle_packet(decoded)
                 if time.time() - last > 1:
-                    print("dev", device_id, "api_idx", hex(api_index), "api_class", hex(api_class), "manuf_code", hex(manuf_code), "manuf_code", "device_type", hex(device_type))
-                    print("full", hex(msg.arbitration_id), bin(msg.arbitration_id))
+                    #print(str(decoded))
+                    #print("full", hex(msg.arbitration_id), bin(msg.arbitration_id))
                     last = time.time()
                 #time.sleep(1)
         except Exception as e:
@@ -97,7 +119,8 @@ class FakeCanManager(CanManager):
         self.is_killed = True
 
     def queue_message(self, message: can.Message):
-        print(bin(message.arbitration_id), bin(int.from_bytes(message.data, 'big')))
+        pass
+        #print(bin(message.arbitration_id), bin(int.from_bytes(message.data, 'big')))
 
 
 def is_raspberrypi():
