@@ -12,12 +12,6 @@ class TShirtBot:
         self.back_left = SparkMax(12)
         self.front_right = SparkMax(11)
         self.back_right = SparkMax(10)
-        self.can_manager.add_device(self.rotate_barrel)
-        self.can_manager.add_device(self.tilter)
-        self.can_manager.add_device(self.front_left)
-        self.can_manager.add_device(self.front_right)
-        self.can_manager.add_device(self.back_left)
-        self.can_manager.add_device(self.back_right)
         self.enabled = False
         self.last_ping = 0
         self.is_killed = False
@@ -31,7 +25,6 @@ class TShirtBot:
 
     def refresh_ping(self):
         self.last_ping = time.time()
-
 
     def forward(self):
         self.front_left.set_percent(.1)

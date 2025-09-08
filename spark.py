@@ -37,19 +37,13 @@ def create_data(data, data_size, total_size):
 
 class SparkMax(CanDevice):
     def __init__(self, can_id):
-        self.can_id = can_id
+        super().__init__(can_id)
         self.encoder_position = 0
-        self.last_time_recieved = 0
-    
-    def get_can_id(self):
-        return self.can_id
-    
+
     def handle_packet(self, msg: DecodedCanPacket):
+        super().handle_packet(msg)
         self.last_time_recieved = time.time()
         print(str(msg))
-    
-    def set_manager(self, manager):
-        self.manager = manager
 
     def set_percent(self, percent):
         self.send_control_frame(ControlMode.Duty_Cycle_Set, percent)

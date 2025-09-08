@@ -131,5 +131,7 @@ def run_site(bot: robotcore.TShirtBot):
     sio.attach(app)
     app.router.add_get('/', index)
     app.router.add_static('/', path="site/", name="static")
-
-    web.run_app(app, port=5000)
+    try:
+        web.run_app(app, port=5000)
+    except:
+        return

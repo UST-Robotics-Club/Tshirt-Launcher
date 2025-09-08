@@ -17,4 +17,4 @@ if __name__ == '__main__':
         website.run_site(bot)
     except KeyboardInterrupt:
         print("Stopping")
-        bot.kill_thread()
+    bot.kill_thread()

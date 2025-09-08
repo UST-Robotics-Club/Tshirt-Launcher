@@ -5,29 +5,13 @@ import struct
 import time
 import threading
 from queue import Queue
+from candevice import CanDevice, DecodedCanPacket
+
 HEARTBEAT_ID = 0x2052C80
 HEARTBEAT_SIZE = 8
 
 HEARTBEAT_DATA = [255] * HEARTBEAT_SIZE
 CAN_EFF_FLAG = 0x80000000
-
-class DecodedCanPacket:
-    device_id: int
-    api_index: int
-    api_class: int
-    manuf_code: int
-    device_type: int
-    def __str__(self):
-        return f"dev {self.device_id} api_idx {hex(self.api_index)} api_class {hex(self.api_class)} manuf_code {hex(self.manuf_code)} device_type {hex(self.device_type)}"
-
-class CanDevice(ABC):
-    @abstractmethod
-    def get_can_id(self) -> int:
-        pass
-
-    @abstractmethod
-    def handle_packet(self, msg: DecodedCanPacket):
-        pass
 
 class CanManager:
     def __init__(self):
@@ -35,7 +19,10 @@ class CanManager:
         self.bus = None
         self.is_killed = False
         self.write_queue: Queue[can.Message] = Queue()
+        
     def add_device(self, device: CanDevice):
+        if device.get_can_id() in self.devices:
+            raise ValueError(f"Tried to add duplicate CAN Id {device.get_can_id()}")
         self.devices[device.get_can_id()] = device
         device.set_manager(self)
 
@@ -129,10 +116,14 @@ def is_raspberrypi():
             if 'raspberry pi' in m.read().lower(): return True
     except Exception: pass
     return False
-
-def get_can_manager():
+can_manager_instance = None
+def get_can_manager() -> CanManager:
     """Returns either a real or mock CanManager depending on if the code is actually running on a Pi"""
-    if is_raspberrypi():
-        return CanManager()
-    else:
-        return FakeCanManager()
+
+    global can_manager_instance
+    if can_manager_instance is None:
+        if is_raspberrypi():
+            can_manager_instance = CanManager()
+        else:
+            can_manager_instance = FakeCanManager()
+    return can_manager_instance
