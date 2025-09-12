@@ -53,7 +53,8 @@ let holdTurretBtn = document.getElementById("hold");
 let pingHistory = [];
 function doPing() {
     let start = Date.now();
-    socket.emit("ping", function (enabled) {
+    socket.emit("ping", function (status) {
+        let enabled = status[0];
         let now = Date.now()
         pingHistory.unshift(now - start);
         pingHistory = pingHistory.slice(0, 6);
@@ -90,7 +91,7 @@ holdTurretBtn.addEventListener("click", function (e){
 pointerEventHandlers(shootBtn, function(e) {
     e.preventDefault();
     if (document.getElementById("shoot-safety").checked) {
-        socket.emit("shoot", 0.1);
+        socket.emit("shoot", 1);
     }
 }, function(e){
     e.preventDefault();
@@ -195,7 +196,7 @@ document.addEventListener("pointermove", function(e) {
         let dx = e.pageX - cx;
 
         dy = clamp(dy, -maxDist, maxDist);
-        dx = clamp(dx, -0, 0);
+        dx = clamp(dx, -maxDist, maxDist);
 
         // Constrain to within maxDist px of the center
         innerJoystickCenterX = cx + dx;

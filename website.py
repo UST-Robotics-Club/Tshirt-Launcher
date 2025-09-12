@@ -95,7 +95,7 @@ async def ping(sid):
         robot.refresh_ping()
     if not robot.get_enabled():
         current_driver = ""
-    return robot.get_enabled()
+    return robot.get_status_info()
 
 @sio.event
 async def disable(sid):

@@ -44,16 +44,18 @@ class CanManager:
             while not self.is_killed:
                 msg = self.bus.recv()
                 decoded = DecodedCanPacket()
+                decoded.full_can_id = msg.arbitration_id
                 decoded.device_id =   (0b00000000000000000000000111111 & msg.arbitration_id)
                 decoded.api_index =   (0b00000000000000000001111000000 & msg.arbitration_id) >> 6
                 decoded.api_class =   (0b00000000000001111110000000000 & msg.arbitration_id) >> 10
                 decoded.manuf_code =  (0b00000111111110000000000000000 & msg.arbitration_id) >> 16
-                decoded.device_type =  (0b11111000000000000000000000000 & msg.arbitration_id) >> 24
+                decoded.device_type = (0b11111000000000000000000000000 & msg.arbitration_id) >> 24
+                decoded.data = msg.data
                 if decoded.device_id in self.devices:
                     self.devices[decoded.device_id].handle_packet(decoded)
                 if time.time() - last > 1:
                     #print(str(decoded))
-                    #print("full", hex(msg.arbitration_id), bin(msg.arbitration_id))
+                    #print("full", hex(msg.arbitration_id))
                     last = time.time()
                 #time.sleep(1)
         except Exception as e:

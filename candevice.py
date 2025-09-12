@@ -5,13 +5,15 @@ import time
 import canmanager
 
 class DecodedCanPacket:
+    full_can_id: int
     device_id: int
     api_index: int
     api_class: int
     manuf_code: int
     device_type: int
+    data: bytearray
     def __str__(self):
-        return f"dev {self.device_id} api_idx {hex(self.api_index)} api_class {hex(self.api_class)} manuf_code {hex(self.manuf_code)} device_type {hex(self.device_type)}"
+        return f"full 0x{self.full_can_id: X} dev {self.device_id} api_idx {hex(self.api_index)} api_class {hex(self.api_class)} manuf_code {hex(self.manuf_code)} device_type {hex(self.device_type)} data {str(self.data)}"
 
 class CanDevice(ABC):
 

@@ -39,13 +39,32 @@ class SparkMax(CanDevice):
     def __init__(self, can_id):
         super().__init__(can_id)
         self.encoder_position = 0
+        self.encoder_offset = 0
+        self.status = {}
 
     def handle_packet(self, msg: DecodedCanPacket):
         super().handle_packet(msg)
         self.last_time_recieved = time.time()
-        print(str(msg))
-
-    def set_percent(self, percent):
+        #print(str(msg))
+        if msg.api_class == 0x2e:
+            if msg.api_index == 2:
+                self.encoder_position = struct.unpack("<f", msg.data[4:8])
+                # #print(self.encoder_position)
+                # try:
+                    
+                #     for d in self.status[2]:
+                #        print(hex(d)[2:], end="_")
+                # except:
+                #     pass
+        self.status[msg.api_index] = msg.data
+    def get_encoder_position(self):
+        """Get the encoder position, taking into account wherever it was last reset"""
+        return self.encoder_position + self.encoder_offset
+    def reset_encoder_position(self):
+        """Make this position be reported as 0 """
+        self.encoder_offset = -self.encoder_position
+    def set_duty_cycle(self, percent):
+        """Percent should be between -1 and 1"""
         self.send_control_frame(ControlMode.Duty_Cycle_Set, percent)
 
     def send_control_frame(self, mode, setpoint):
@@ -57,7 +76,25 @@ class SparkMax(CanDevice):
             #print(f"Sent control frame: ID=0x{can_id:X}, data={list(data)}")
         except can.CanError as e:
             pass
-        
+    def blink_led(self):
+        """doesn't work"""
+        can_id = (0x2051D80 + self.can_id) | CAN_EFF_FLAG
+        msg = can.Message(arbitration_id=can_id, is_extended_id=True)
+        try:
+            self.manager.queue_message(msg)
+            print(f"Sent blink frame: ID=0x{can_id:X}")
+        except can.CanError as e:
+            pass
+    def clear_faults(self):
+        """Does work. Clears sticky faults"""
+        can_id = (0x2051B80 + self.can_id) | CAN_EFF_FLAG
+        msg = can.Message(arbitration_id=can_id, is_extended_id=True)
+        try:
+            self.manager.queue_message(msg)
+            print(f"Sent clear frame: ID=0x{can_id:X}")
+        except can.CanError as e:
+            pass
+
     def set_status_frame_period(self, frame_id, period):
         can_id = (frame_id + self.can_id) | CAN_EFF_FLAG
         data = struct.pack('<H', period) + bytes(STATUS_SIZE - 2)

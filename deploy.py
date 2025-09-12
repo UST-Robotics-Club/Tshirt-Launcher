@@ -15,7 +15,7 @@ except:
     print("Trying ethernet")
     host = "169.254.15.253"
     ssh.connect(host, username="ustrobotics", password="ustrobotics2")
-ssh.exec_command("sudo pkill robot_main.py\n")
+ssh.exec_command("sudo pkill python\n")
 time.sleep(1)
 sftp = ssh.open_sftp()
 local_base = os.getcwd()
