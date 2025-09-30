@@ -12,11 +12,11 @@
 
 </head>
 
-<body>
+<body class="show-1">
     <div class="container-fluid mt-3" id="main-container">
         <div class="row">
             <div class="col">
-                <div class="card shadow-sm" id="control-card">
+                <div class="card shadow-sm disconnected" id="control-card">
                     <div class="card-body">
                         <h3 class="card-title">Robot Control</h3>
                         <div class="row">
@@ -38,6 +38,11 @@
                             </div>
                             <div class="col">
                                 <h5>Pressure: 500</h5>
+                                <select id="mode-select" class="dropdown">
+                                    <option value="1">Two Slider</option>
+                                    <option value="2">Hybrid</option>
+                                    <option value="3">Turret</option>
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -46,27 +51,30 @@
         </div>
         <div class="row align-items-center" id="controls-row">
             <div class="col-sm-6 p-0 m-0 d-flex justify-content-center align-items-center position-relative h-100 card" id="drive-controls">
-                <div id="joystick-outer" class="shadow">
+                <div id="joystick-outer" class="shadow show-for-2">
                     <div id="joystick-inner" class="shadow">
                     </div>
                 </div>
+                <input type="range" min="-100" max="100" step="0.1" class="form-range show-for-1" id="forward-stick">
+
                 <input type="range" min="0" max="100" step="1" class="form-range" id="throttle">
             </div>
             <div class="col-sm-6 h-100 p-0 m-0 d-flex justify-content-center align-items-center position-relative card" id="turret-controls">
+                <input type="range" min="-100" max="100" step="0.1" class="form-range show-for-1" id="rotate-stick">
                 
-                <button id="shoot" class="btn btn-primary shadow">
+                <button id="shoot" class="btn btn-primary shadow show-for-2">
                     Launch
                 </button>
-                <div class="form-check form-switch" id="shoot-safety-box">
+                <div class="form-check form-switch show-for-2" id="shoot-safety-box">
                     <input class="form-check-input" type="checkbox" role="switch" id="shoot-safety">
                     <label class="form-check-label ms-1" for="shoot-safety">Enabled</label>
                 </div>
-                <div id="updown-box">
+                <div id="updown-box" class="show-for-2">
                     <button id="tilt-up" class="d-block btn btn-primary adjust-btn">&uparrow;</button>
                     <div id="tilt-text">1900</div>
                     <button id="tilt-down" class="d-block btn btn-primary adjust-btn">&downarrow;</button>
                 </div>
-                <div id="leftright-box">
+                <div id="leftright-box" class="show-for-2">
                     <button id="turret-left" class="btn btn-primary adjust-btn">&larr;</button>
                     <div id="rotate-text">2000</div>
                     <button id="turret-right" class="btn btn-primary adjust-btn">&rarr;</button>

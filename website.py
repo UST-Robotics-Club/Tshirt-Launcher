@@ -76,7 +76,7 @@ async def rotateBarrels(sid):
     print("Barrels Be Rotating!")
     robot.rotate()
 @sio.event
-async def stopTurret(sid):
+async def stopTilt(sid):
     if sid != current_driver: return
     print("Turret Stopped")
     robot.stop_turret()

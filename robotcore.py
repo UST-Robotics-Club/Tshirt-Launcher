@@ -2,7 +2,8 @@ from spark import SparkMax
 from canmanager import *
 import gpiozero
 import time
-#gpiozero.Device.pin_factory = gpiozero.pins.pigpio.PiGPIOFactory
+import fakes
+gpiozero.Device.pin_factory = gpiozero.pins.pigpio.PiGPIOFactory
 class TShirtBot:
     def __init__(self):
         self.can_manager = get_can_manager()
@@ -20,6 +21,8 @@ class TShirtBot:
         self.shooting = True
         self.requested_left = 0
         self.requested_right = 0
+        self.time_end_shoot = 0
+        self.relay = gpiozero.LED(27) if fakes.is_raspberrypi() else fakes.FakeRelay()
 
     def kill_thread(self):
         self.can_manager.stop_bus()
@@ -32,7 +35,6 @@ class TShirtBot:
         self.front_left.set_duty_cycle(.1)
         self.front_right.set_duty_cycle(-.1)
         self.back_left.set_duty_cycle(.1)
-        print("I am going forwards")
         self.back_right.set_duty_cycle(-.1)
 
     def backward(self):
@@ -91,6 +93,9 @@ class TShirtBot:
         print("Enabled: ", enabled)
         self.enabled = enabled
         self.can_manager.set_heartbeat(enabled)
+        if not enabled:
+            self.drive(0, 0)
+            self.set_shooting(False)
         
     def get_enabled(self):
         return self.enabled
@@ -110,6 +115,13 @@ class TShirtBot:
 
             if self.shooting:
                 pass
+        if now <= self.time_end_shoot:
+        #print("on")
+            self.relay.on()
+        else:
+            #print("off")
+
+            self.relay.off()
         time.sleep(0.02)
     
     def main_loop(self):

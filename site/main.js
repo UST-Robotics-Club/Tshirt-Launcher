@@ -1,5 +1,4 @@
 var socket = io();
-
 function pointerEventHandlers(element, onDown, onUp) {
     element.addEventListener("pointerdown", function(e) {
         element.setPointerCapture(e.pointerId);
@@ -50,6 +49,7 @@ let tiltUpBtn = document.getElementById("tilt-up");
 let tiltDownBtn = document.getElementById("tilt-down");
 let rotateBtn = document.getElementById("rotate");
 let holdTurretBtn = document.getElementById("hold");
+let modeSelect = document.getElementById("mode-select");
 let pingHistory = [];
 function doPing() {
     let start = Date.now();
@@ -71,8 +71,13 @@ function doPing() {
         }
     })
 }
-setInterval(doPing, 750);
-
+setInterval(doPing, 100);
+socket.on("connect", function() {
+    document.getElementById("control-card").classList.remove("disconnected");
+});
+socket.on("disconnect", function() {
+    document.getElementById("control-card").classList.add("disconnected");
+});
 disableBtnLabel.addEventListener("pointerdown", function (e) {
     e.preventDefault();
     socket.emit("disable");
@@ -104,19 +109,23 @@ pointerEventHandlers(tiltUpBtn, function(e) {
     socket.emit("tiltUp");
 }, function(e){
     e.preventDefault();
-    socket.emit("stopTurret");
+    socket.emit("stopTilt");
 });
 pointerEventHandlers(tiltDownBtn, function(e) {
     e.preventDefault();
     socket.emit("tiltDown");
 }, function(e){
     e.preventDefault();
-    socket.emit("stopTurret");
+    socket.emit("stopTilt");
 });
 document.ondblclick = function(e) {
     e.preventDefault();
 }
-
+modeSelect.addEventListener("change", function(e){
+    document.body.classList.remove("show-1", "show-2", "show-3");
+    document.body.classList.add("show-"+this.value);
+    socket.emit("drive", 0, 0);
+});
 forwardBtn.addEventListener("mousedown", function (e) {
     e.preventDefault();
     socket.emit("forward");
@@ -156,13 +165,16 @@ rotateBtn.addEventListener("mousedown", function (e) {
 
 rotateBtn.addEventListener("mouseup", function (e) {
     e.preventDefault();
-    socket.emit("stopTurret");
+    socket.emit("stopTilt");
 });
 
 let joystickInner = document.getElementById("joystick-inner");
 let joystickOuter = document.getElementById("joystick-outer");
+let forwardStick = document.getElementById("forward-stick");
+let rotateStick = document.getElementById("rotate-stick");
 let driveControlSection = document.getElementById("drive-controls");
 let joystickId = false;
+
 pointerEventHandlers(joystickInner, function(e) {
     e.preventDefault();
     joystickId = e.pointerId;
@@ -179,6 +191,31 @@ pointerEventHandlers(joystickInner, function(e) {
         joystickInner.style.left = "60px";
         socket.emit("drive", 0, 0);
     }
+});
+pointerEventHandlers(forwardStick, function(e) {
+    forwardStick.classList.add("stick-active");
+}, function(e) {
+    forwardStick.value = 0;
+    updateDriving();
+    forwardStick.classList.remove("stick-active");
+});
+pointerEventHandlers(rotateStick, function(e) {
+    rotateStick.classList.add("stick-active");
+}, function(e) {
+    rotateStick.value = 0;
+    updateDriving();
+    forwardStick.classList.remove("stick-active");
+});
+function updateDriving() {
+    let throttle = (document.getElementById("throttle").value / 100);
+    let turnThrottle = Math.min(throttle, 0.15);
+    socket.emit("drive", forwardStick.value / 100 * throttle, rotateStick.value / 100 * turnThrottle);
+}
+forwardStick.addEventListener("input", function() {
+    updateDriving();
+});
+rotateStick.addEventListener("input", function() {
+    updateDriving();
 });
 document.addEventListener("pointermove", function(e) {
     if (e.pointerId === joystickId) {

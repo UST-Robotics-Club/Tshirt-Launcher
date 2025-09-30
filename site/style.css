@@ -61,6 +61,9 @@
 .control-enabled #main-container {
 	margin-top: 0 !important;
 }
+#control-card.disconnected {
+	background-color: red;
+}
 .shadow {
 	--bs-box-shadow: 0 1rem 1rem rgba(0, 0, 0, 0.15);
 }
@@ -86,22 +89,41 @@
 	margin-right: 10vw;
 	margin-bottom: 10vh;
 }
-#throttle {
+#throttle, #forward-stick {
 	position: absolute;
-	right:-50px;
 	top:calc(50% - 25px);
 	width:200px;
 	transform: rotate(270deg);
 	-webkit-appearance: none;
 	appearance: none;
 }
+#throttle {
+	right:-50px;
+}
+#forward-stick {
+	left:50px;
+	width: 250px;
+}
 #throttle.form-range::-webkit-slider-thumb {
 	width: 2rem;
 	height: 2rem;
 	transform: translateY(-0.5rem);
 	appearance: none;
+	background-color: gray;
+}
+#forward-stick.form-range::-webkit-slider-thumb {
+	width: 4rem;
+	height: 4rem;
+	transform: translateY(-1.5rem);
+	appearance: none;
 }
 
+#rotate-stick.form-range::-webkit-slider-thumb {
+	width: 4rem;
+	height: 4rem;
+	transform: translateY(-1.5rem);
+	appearance: none;
+}
 #shoot {
 	width:100px;
 	height:100px;
@@ -154,6 +176,19 @@
 	vertical-align: middle;
 	margin-right:20px;
 	margin-left: 20px;
+}
+
+
+body:not(.show-1) .show-for-1 {
+	display: none!important;
+}
+
+body:not(.show-2) .show-for-2 {
+	display: none!important;
+}
+
+body:not(.show-3) .show-for-3 {
+	display: none!important;
 }
 @media (max-width: 577px) {
 	.control-enabled #controls-row {

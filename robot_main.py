@@ -4,7 +4,7 @@ import robotcore
 import threading
 import os
 import sys
-from canmanager import is_raspberrypi
+from fakes import is_raspberrypi
 if __name__ == '__main__':
     if is_raspberrypi():
         os.chdir("/home/ustrobotics/Documents/")

@@ -6,6 +6,7 @@ import time
 import threading
 from queue import Queue
 from candevice import CanDevice, DecodedCanPacket
+import fakes
 
 HEARTBEAT_ID = 0x2052C80
 HEARTBEAT_SIZE = 8
@@ -111,20 +112,13 @@ class FakeCanManager(CanManager):
         pass
         #print(bin(message.arbitration_id), bin(int.from_bytes(message.data, 'big')))
 
-
-def is_raspberrypi():
-    try:
-        with io.open('/sys/firmware/devicetree/base/model', 'r') as m:
-            if 'raspberry pi' in m.read().lower(): return True
-    except Exception: pass
-    return False
 can_manager_instance = None
 def get_can_manager() -> CanManager:
     """Returns either a real or mock CanManager depending on if the code is actually running on a Pi"""
 
     global can_manager_instance
     if can_manager_instance is None:
-        if is_raspberrypi():
+        if fakes.is_raspberrypi():
             can_manager_instance = CanManager()
         else:
             can_manager_instance = FakeCanManager()
