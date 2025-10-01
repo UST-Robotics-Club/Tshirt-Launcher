@@ -90,19 +90,25 @@ enableBtnLabel.addEventListener("pointerdown", function (e) {
 });
 holdTurretBtn.addEventListener("click", function (e){
     e.preventDefault();
-    console.log("hold turrent event listener");
     socket.emit("hold");
 });
+// pointerEventHandlers(shootBtn, function(e) {
+//     e.preventDefault();
+//     if (document.getElementById("shoot-safety").checked) {
+//         socket.emit("shoot", 0.1);
+//     }
+// }, function(e){
+//     e.preventDefault();
+//     socket.emit("shoot", 0.0);
+// });
 pointerEventHandlers(shootBtn, function(e) {
     e.preventDefault();
     if (document.getElementById("shoot-safety").checked) {
-        socket.emit("shoot", 1);
+        socket.emit("autoshoot", true);
     }
 }, function(e){
     e.preventDefault();
-    if (document.getElementById("shoot-safety").checked) {
-        socket.emit("shoot", 0.0);
-    }
+    socket.emit("autoshoot", false);
 });
 pointerEventHandlers(tiltUpBtn, function(e) {
     e.preventDefault();

@@ -45,11 +45,11 @@ class SparkMax(CanDevice):
     def handle_packet(self, msg: DecodedCanPacket):
         super().handle_packet(msg)
         self.last_time_recieved = time.time()
-        #print(str(msg))
+        #if(self.can_id==6): print(str(msg))
         if msg.api_class == 0x2e:
             if msg.api_index == 2:
-                self.encoder_position = struct.unpack("<f", msg.data[4:8])
-                # #print(self.encoder_position)
+                self.encoder_position = struct.unpack("<f", msg.data[4:8])[0]
+                #print(self.encoder_position)
                 # try:
                     
                 #     for d in self.status[2]:
@@ -58,7 +58,7 @@ class SparkMax(CanDevice):
                 #     pass
         self.status[msg.api_index] = msg.data
     def get_encoder_position(self):
-        """Get the encoder position, taking into account wherever it was last reset"""
+        """Get the encoder position, taking into account wherever it was last reset. Measured in rotations."""
         return self.encoder_position + self.encoder_offset
     def reset_encoder_position(self):
         """Make this position be reported as 0 """

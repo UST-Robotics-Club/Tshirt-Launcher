@@ -26,29 +26,12 @@ async def shoot(sid, sec):
     if sid != current_driver: return
     print("shoot!", sec)
     robot.pulse_shoot(sec)
-    #robot.set_two(float(req) / 100.0)
+    
+@sio.event
+async def autoshoot(sid, autoshoot):
+    if sid != current_driver: return
+    robot.set_shooting(autoshoot)
 
-
-@sio.event
-async def forward(sid):
-    if sid != current_driver: return
-    print("Drive Forward!")
-    robot.forward()
-@sio.event
-async def backward(sid):
-    if sid != current_driver: return
-    print("Drive Backward!")
-    robot.backward()
-@sio.event
-async def left(sid):
-    if sid != current_driver: return
-    print("Turn Left!")
-    robot.turn_left()
-@sio.event
-async def right(sid):
-    if sid != current_driver: return
-    print("Turn Right!")
-    robot.turn_right()
 @sio.event
 async def drive(sid, forward, rotate):
     if sid != current_driver: return

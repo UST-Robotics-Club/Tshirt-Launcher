@@ -54,6 +54,7 @@ class CanManager:
                 decoded.data = msg.data
                 if decoded.device_id in self.devices:
                     self.devices[decoded.device_id].handle_packet(decoded)
+                
                 if time.time() - last > 1:
                     #print(str(decoded))
                     #print("full", hex(msg.arbitration_id))
