@@ -154,13 +154,18 @@ class Turret:
         self.is_rotating = False
         self.target_tilt = 0
         self.manual_geneva_mode = False
+        self.shoot_config = {
+            "cooldown": 2, # 0 is for fast mode, 2 for normal mode
+            "solenoid_time": 0.2, # seconds
+            "geneva_speed": 0.2 # 0.4 is for "fast mode", 0.2 for normal mode
+        }
     
     def tick(self):
         # Sequence: RelayOn, wait time, RelayOff, Start revolver, wait until pos>=1 slot, stop revolver, repeat.
 
         now = time.time()
         during_shoot_period = now <= self.time_end_shoot
-        in_shoot_cooldown = (now - self.last_shot_time) < 2
+        in_shoot_cooldown = (now - self.last_shot_time) < self.shoot_config["cooldown"]
         #print(self.revolver_motor.get_encoder_position(), self.target_barrel_rotation)
         if during_shoot_period:
             #print("on+++++++")
@@ -179,13 +184,13 @@ class Turret:
                     self.target_barrel_rotation = self.target_barrel_rotation + 20
         if self.target_barrel_rotation > self.revolver_motor.get_encoder_position():
             if not self.manual_geneva_mode:
-                self.revolver_motor.set_duty_cycle(0.2)
+                self.revolver_motor.set_duty_cycle(self.shoot_config["geneva_speed"])
         else:
             if not self.manual_geneva_mode:
                 self.revolver_motor.set_duty_cycle(0)
             self.is_rotating = False
             if self.auto_shooting and not during_shoot_period and not in_shoot_cooldown:
-                self.pulse_shoot(0.2)
+                self.pulse_shoot(self.shoot_config["solenoid_time"])
         if self.target_tilt != 0:
             #print(self.target_tilt, self.tilter.get_encoder_position())
             error = self.target_tilt - self.tilter.get_encoder_position()
