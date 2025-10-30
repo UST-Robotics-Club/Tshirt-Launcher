@@ -4,7 +4,7 @@
 <head>
     <meta charset='utf-8'>
     <title>T-Shirt!!</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1,user-scalable=0"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1,user-scalable=0" />
     <link rel='stylesheet' type='text/css' media='screen' href='bootstrap.css'>
     <link rel='stylesheet' type='text/css' media='screen' href='style.css'>
     <script src="./socket.io.min.js"></script>
@@ -13,6 +13,8 @@
 </head>
 
 <body class="show-1">
+    <img id="camera" src="">
+
     <div class="container-fluid mt-3" id="main-container">
         <div class="row">
             <div class="col">
@@ -37,7 +39,6 @@
                                 <pre id="ping"></pre>
                             </div>
                             <div class="col">
-                                <h5>Pressure: 500</h5>
                                 <select id="mode-select" class="dropdown">
                                     <option value="1">Two Slider</option>
                                     <option value="2">Hybrid</option>
@@ -49,8 +50,10 @@
                 </div>
             </div>
         </div>
+        <p id="enable-message">Robot is enabled. You aren't driving. Tap enable to drive.</p>
         <div class="row align-items-center" id="controls-row">
-            <div class="col-sm-6 p-0 m-0 d-flex justify-content-center align-items-center position-relative h-100 card" id="drive-controls">
+            <div class="col-sm-6 p-0 m-0 d-flex justify-content-center align-items-center position-relative h-100 card"
+                id="drive-controls">
                 <div id="joystick-outer" class="shadow show-for-2">
                     <div id="joystick-inner" class="shadow">
                     </div>
@@ -59,9 +62,10 @@
 
                 <input type="range" min="0" max="100" step="1" class="form-range" id="throttle">
             </div>
-            <div class="col-sm-6 h-100 p-0 m-0 d-flex justify-content-center align-items-center position-relative card" id="turret-controls">
+            <div class="col-sm-6 h-100 p-0 m-0 d-flex justify-content-center align-items-center position-relative card"
+                id="turret-controls">
                 <input type="range" min="-100" max="100" step="0.1" class="form-range show-for-1" id="rotate-stick">
-                
+
                 <button id="shoot" class="btn btn-primary shadow show-for-2">
                     Launch
                 </button>
@@ -79,6 +83,8 @@
                     <div id="rotate-text">2000</div>
                     <button id="turret-right" class="btn btn-primary adjust-btn">&rarr;</button>
                 </div>
+                <button class="btn btn-primary show-for-3" id="rotate">Rotate Barrels</button>
+
             </div>
         </div>
     </div>
@@ -101,7 +107,6 @@
         <br>
         <button class="btn btn-primary" id="hold">Hold Turret</button>
         <br>
-        <button class="btn btn-primary" id="rotate">Rotate Barrels</button>
         <br>
         <br>
         <br>

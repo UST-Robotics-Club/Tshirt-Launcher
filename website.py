@@ -5,7 +5,7 @@ from aiohttp import web
 
 sio = socketio.AsyncServer(cors_allowed_origins='*')
 robot: robotcore.TShirtBot
-current_driver = ""
+current_drivers = []
 
 @sio.event
 async def connect(sid, environ):
@@ -14,86 +14,93 @@ async def connect(sid, environ):
 
 @sio.event
 async def disconnect(sid):
-    global current_driver
-    if sid == current_driver:
+    global current_drivers
+    if sid in current_drivers:
         robot.set_enabled(False)
-        current_driver = ""
+        current_drivers = []
     """Handle client disconnection."""
     print(f"Client disconnected: {sid}")
 
 @sio.event
 async def shoot(sid, sec):
-    if sid != current_driver: return
+    if sid not in current_drivers: return
     print("shoot!", sec)
     robot.pulse_shoot(sec)
-    
+
 @sio.event
 async def autoshoot(sid, autoshoot):
-    if sid != current_driver: return
+    if sid not in current_drivers: return
     robot.set_shooting(autoshoot)
 
 @sio.event
 async def drive(sid, forward, rotate):
-    if sid != current_driver: return
+    if sid not in current_drivers: return
     robot.drive(forward, rotate)
 
 @sio.event
 async def stop(sid):
-    if sid != current_driver: return
+    if sid not in current_drivers: return
     print("Stop Driving!")
     robot.drive(0, 0)
     
 @sio.event
 async def tiltUp(sid):
-    if sid!= current_driver: return
+    if sid not in current_drivers: return
     print("Tilting Up!")
     robot.tilt_up()
 @sio.event
 async def tiltDown(sid):
-    if sid!= current_driver: return
+    if sid not in current_drivers: return
     print("Tilting Down!")
     robot.tilt_down()
 @sio.event
+async def manualGeneva(sid, amount):
+    if sid not in current_drivers: return
+    robot.manual_geneva(amount)
+
+@sio.event
 async def rotateBarrels(sid):
-    if sid != current_driver: return
+    if sid not in current_drivers: return
     print("Barrels Be Rotating!")
     robot.rotate()
 @sio.event
 async def stopTilt(sid):
-    if sid != current_driver: return
+    if sid not in current_drivers: return
     print("Turret Stopped")
     robot.stop_turret()
 
 @sio.event
 async def hold(sid):
-    if sid != current_driver: return
+    if sid not in current_drivers: return
     print("Holding Turret")
     robot.hold()
 
-    
+@sio.event
+async def frame(sid):
+    return robot.get_camera_frame()
+
 @sio.event
 async def ping(sid):
-    global current_driver
-    if sid == current_driver:
-        robot.refresh_ping()
+    global current_drivers
+    if sid in current_drivers:
+        robot.refresh_ping(sid)
     if not robot.get_enabled():
-        current_driver = ""
-    return robot.get_status_info()
+        current_drivers = []
+    return [current_drivers, robot.get_status_info()]
 
 @sio.event
 async def disable(sid):
-    global current_driver
-    current_driver = ""
+    global current_drivers
+    current_drivers = []
     robot.set_enabled(False)
     await sio.emit("disable")
 
 @sio.event
 async def enable(sid):
-    global current_driver
-    if not current_driver:
-        current_driver = sid
-        robot.refresh_ping()
-        robot.set_enabled(True)
+    global current_drivers
+    current_drivers.append(sid)
+    robot.refresh_ping(sid)
+    robot.set_enabled(True)
 
 @web.middleware
 async def cache_control(request: web.Request, handler):

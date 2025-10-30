@@ -61,11 +61,15 @@ class SparkMax(CanDevice):
         """Get the encoder position, taking into account wherever it was last reset. Measured in rotations."""
         return self.encoder_position + self.encoder_offset
     def reset_encoder_position(self):
-        """Make this position be reported as 0 """
+        """Make this position be reported as 0. Only does it on this software side, not by sending a command to the Spark """
         self.encoder_offset = -self.encoder_position
     def set_duty_cycle(self, percent):
         """Percent should be between -1 and 1"""
         self.send_control_frame(ControlMode.Duty_Cycle_Set, percent)
+
+    def set_position(self, position):
+        """Position is expressed in rotations"""
+        self.send_control_frame(ControlMode.Position_Set, position)
 
     def send_control_frame(self, mode, setpoint):
         can_id = (mode + self.can_id) | CAN_EFF_FLAG

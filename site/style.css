@@ -62,7 +62,13 @@
 	margin-top: 0 !important;
 }
 #control-card.disconnected {
-	background-color: red;
+	background-color: red!important;
+}
+#enable-message {
+	display: none;
+}
+.enabled-not-driving #enable-message{
+	display:block;
 }
 .shadow {
 	--bs-box-shadow: 0 1rem 1rem rgba(0, 0, 0, 0.15);
@@ -93,6 +99,7 @@
 	position: absolute;
 	top:calc(50% - 25px);
 	width:200px;
+	max-width:200px;
 	transform: rotate(270deg);
 	-webkit-appearance: none;
 	appearance: none;
@@ -102,7 +109,7 @@
 }
 #forward-stick {
 	left:50px;
-	width: 250px;
+	width: 60vh;
 }
 #throttle.form-range::-webkit-slider-thumb {
 	width: 2rem;
@@ -138,7 +145,16 @@
 	display: flex;
 
 }
-
+.card {
+	background: transparent!important;
+}
+#camera {
+	position: absolute;
+	top:0%;
+	z-index: -10;
+	height:100%;
+	left:20%;
+}
 :has(#shoot-safety:not(:checked)) #shoot {
   background-color: lightgray;
   cursor: not-allowed;
@@ -197,5 +213,11 @@ body:not(.show-3) .show-for-3 {
 	}
 	#turret-controls, #drive-controls {
 		height: 50% !important;
+	}
+	#camera {
+		height:unset;
+		width:100%;
+		left:0%;
+		top: 30%;
 	}
 }

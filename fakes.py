@@ -7,6 +7,8 @@ class FakeRelay():
         pass
     def off(self):
         pass
+    def close(self):
+        pass
 def is_raspberrypi():
     try:
         with io.open('/sys/firmware/devicetree/base/model', 'r') as m:

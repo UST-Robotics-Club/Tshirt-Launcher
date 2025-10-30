@@ -78,6 +78,7 @@ class CanManager:
         os.system('sudo ifconfig can0 up')
         self.bus = can.interface.Bus(channel='can0', interface='socketcan', bitrate=1000000)
         self.start_heartbeat()
+        #self.set_heartbeat(False)
         self.t1 = threading.Thread(target = self.write_loop)
         self.t1.start()
         self.t2 = threading.Thread(target = self.read_loop)

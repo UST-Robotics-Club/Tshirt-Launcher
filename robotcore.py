@@ -3,27 +3,29 @@ from canmanager import *
 import gpiozero
 import time
 import fakes
+import camera
+
 class TShirtBot:
     def __init__(self):
         self.can_manager = get_can_manager()
-        self.front_left = SparkMax(15)
-        self.back_left = SparkMax(12)
-        self.front_right = SparkMax(11)
-        self.back_right = SparkMax(10)
+        self.front_left = SparkMax(10)
+        self.back_left = SparkMax(11)
+        self.front_right = SparkMax(12)
+        self.back_right = SparkMax(15)
         #self.test_spark = SparkMax(16)
         self.enabled = False
-        self.last_ping = 0
+        self.last_ping = {}
         self.is_killed = False
         self.turret = Turret()
         self.requested_left = 0
         self.requested_right = 0
+        self.camera = camera.RoboCamera()
 
     def kill_thread(self):
-        self.can_manager.stop_bus()
         self.is_killed = True
 
-    def refresh_ping(self):
-        self.last_ping = time.time()
+    def refresh_ping(self, sid):
+        self.last_ping[sid] = time.time()
 
     def forward(self):
         self.front_left.set_duty_cycle(.1)
@@ -74,40 +76,46 @@ class TShirtBot:
         self.back_right.set_duty_cycle(0)
 
     def tilt_up(self):
-        self.turret.tilter.set_duty_cycle(-0.1)
+        self.turret.set_tilt_power(-0.1)
 
     def tilt_down(self):
-        self.turret.tilter.set_duty_cycle(0.1)
+        self.turret.set_tilt_power(0.05)
 
     def rotate(self):
         self.turret.revolver_motor.set_duty_cycle(.1)
 
     def stop_turret(self):
-        self.turret.revolver_motor.set_duty_cycle(0)
-        self.turret.tilter.set_duty_cycle(0)
+        self.turret.hold()
+    def manual_geneva(self, amount):
+        self.turret.manual_geneva(amount)
 
     def hold(self):
         self.turret.tilter.set_duty_cycle(.05)
 
     def set_enabled(self, enabled):
         print("Enabled: ", enabled)
+        if self.enabled == enabled: return
         self.enabled = enabled
         self.can_manager.set_heartbeat(enabled)
-        if not enabled:
+        if enabled:
+            self.turret.enable()
+        else:
             self.drive(0, 0)
-            self.set_shooting(False)
+            self.turret.disable()
+            self.last_ping = {}
         
     def get_enabled(self):
         return self.enabled
     
     def get_status_info(self):
-        """Return whatever should be sent to the frontend every 0.75 sec"""
+        """Return whatever should be sent to the frontend every 0.1 sec"""
         return [self.get_enabled()]
     
     def tick(self):
         now = time.time()
-        if now - self.last_ping > 1 and self.enabled:
-            self.set_enabled(False)
+        for ping in self.last_ping.values():
+            if now - ping > 1 and self.enabled:
+                self.set_enabled(False)
         if self.enabled:
             self.front_left.set_duty_cycle(self.requested_left)
             self.back_left.set_duty_cycle(self.requested_left)
@@ -119,16 +127,24 @@ class TShirtBot:
             self.drive(0, 0)
             
         time.sleep(0.02)
+
+    def get_camera_frame(self):
+        return self.camera.get_b64()
     
     def main_loop(self):
         self.can_manager.start_thread()
+        self.camera.start_thread()
         while not self.is_killed:
             self.tick()
+        self.turret.relay.close()
+        self.can_manager.stop_bus()
+        self.camera.stop_thread()
+        
 
 class Turret:
     def __init__(self):
         self.auto_shooting = False
-        self.relay = gpiozero.LED(27) if fakes.is_raspberrypi() or 1 else fakes.FakeRelay()
+        self.relay = OutputPin(27) if fakes.is_raspberrypi() else fakes.FakeRelay()
         self.revolver_motor = SparkMax(6)
         self.tilter = SparkMax(5)
         self.time_end_shoot = 0
@@ -136,13 +152,15 @@ class Turret:
         self.target_barrel_rotation = 0
         self.has_shot = False
         self.is_rotating = False
+        self.target_tilt = 0
+        self.manual_geneva_mode = False
     
     def tick(self):
         # Sequence: RelayOn, wait time, RelayOff, Start revolver, wait until pos>=1 slot, stop revolver, repeat.
 
         now = time.time()
         during_shoot_period = now <= self.time_end_shoot
-        in_shoot_cooldown = (now - self.last_shot_time) < 3
+        in_shoot_cooldown = (now - self.last_shot_time) < 2
         #print(self.revolver_motor.get_encoder_position(), self.target_barrel_rotation)
         if during_shoot_period:
             #print("on+++++++")
@@ -152,20 +170,37 @@ class Turret:
         else:
             #print("off------", self.auto_shooting, self.is_rotating)
             self.relay.off()
-            if self.auto_shooting and not self.is_rotating and self.has_shot:
+            if not self.is_rotating and self.has_shot:
                 self.has_shot = False
                 self.is_rotating = True
-                self.target_barrel_rotation = self.revolver_motor.get_encoder_position() + 20 # gear ratio is 5x4 = 20
+                if self.target_barrel_rotation == 0:
+                    self.target_barrel_rotation = self.revolver_motor.get_encoder_position() + 20
+                else:
+                    self.target_barrel_rotation = self.target_barrel_rotation + 20
         if self.target_barrel_rotation > self.revolver_motor.get_encoder_position():
-            self.revolver_motor.set_duty_cycle(0.2)
+            if not self.manual_geneva_mode:
+                self.revolver_motor.set_duty_cycle(0.2)
         else:
-            self.revolver_motor.set_duty_cycle(0)
+            if not self.manual_geneva_mode:
+                self.revolver_motor.set_duty_cycle(0)
             self.is_rotating = False
             if self.auto_shooting and not during_shoot_period and not in_shoot_cooldown:
-                self.pulse_shoot(0.1)
+                self.pulse_shoot(0.2)
+        if self.target_tilt != 0:
+            #print(self.target_tilt, self.tilter.get_encoder_position())
+            error = self.target_tilt - self.tilter.get_encoder_position()
+            corr = max(min(error * 0.1, 0), -0.1)
+            self.tilter.set_duty_cycle(corr)
+            #print(corr)
+        
 
     def disable(self):
         self.auto_shooting = False
+        self.relay.off()
+        self.target_tilt = 0
+        self.tilter.set_duty_cycle(0)
+    def enable(self):
+        self.hold()
 
     def set_shooting(self, shooting):
         self.auto_shooting = shooting
@@ -173,3 +208,30 @@ class Turret:
     def pulse_shoot(self, sec):
         self.time_end_shoot = time.time() + sec
 
+    def manual_geneva(self, amount):
+        self.revolver_motor.set_duty_cycle(amount)
+        self.manual_geneva_mode = amount != 0
+        if amount == 0:
+            self.target_barrel_rotation = self.revolver_motor.get_encoder_position()
+    def set_tilt(self, angle):
+        self.tilter.set_position(angle)
+    def set_tilt_power(self, power):
+        self.target_tilt = 0
+        self.tilter.set_duty_cycle(power)
+    def hold(self):
+        self.target_tilt = self.tilter.get_encoder_position()
+
+class OutputPin:
+    def __init__(self, pin):
+        self.last_status = False
+        self.pin = pin
+    def set(self, on):
+        if self.last_status != on:
+            self.last_status = on
+            os.system(f"sudo pinctrl set {self.pin} op d{'h' if on else 'l'}")
+    def on(self):
+        self.set(True)
+    def off(self):
+        self.set(False)
+    def close(self):
+        pass
