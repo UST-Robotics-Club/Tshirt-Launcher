@@ -35,6 +35,7 @@ for root, dirs, files in os.walk(local_base):
         sftp.mkdir(remote_path)
 
     for file in files:
+        if ".task" in file: continue
         local_file = os.path.join(root, file)
         remote_file = os.path.join(remote_path, file).replace("\\", "/")
         print(f"Uploading {local_file} to {remote_file}")

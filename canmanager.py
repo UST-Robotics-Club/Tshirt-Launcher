@@ -20,6 +20,7 @@ class CanManager:
         self.bus = None
         self.is_killed = False
         self.write_queue: Queue[can.Message] = Queue()
+        self.heartbeat = None
         
     def add_device(self, device: CanDevice):
         if device.get_can_id() in self.devices:
@@ -54,12 +55,6 @@ class CanManager:
                 decoded.data = msg.data
                 if decoded.device_id in self.devices:
                     self.devices[decoded.device_id].handle_packet(decoded)
-                
-                if time.time() - last > 1:
-                    #print(str(decoded))
-                    #print("full", hex(msg.arbitration_id))
-                    last = time.time()
-                #time.sleep(1)
         except Exception as e:
             print("Read err: ", str(e))
     def write_loop(self):
@@ -77,15 +72,14 @@ class CanManager:
         os.system('sudo ip link set can0 type can bitrate 1000000')  # 1 Mbps
         os.system('sudo ifconfig can0 up')
         self.bus = can.interface.Bus(channel='can0', interface='socketcan', bitrate=1000000)
-        self.start_heartbeat()
-        #self.set_heartbeat(False)
         self.t1 = threading.Thread(target = self.write_loop)
         self.t1.start()
         self.t2 = threading.Thread(target = self.read_loop)
         self.t2.start()
     def set_heartbeat(self, enabled):
         try:
-            self.heartbeat.stop()
+            if self.heartbeat is not None:
+                self.heartbeat.stop()
         except can.exceptions.CanError:
             pass
         if enabled:

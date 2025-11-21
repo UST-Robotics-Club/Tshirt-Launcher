@@ -4,7 +4,9 @@ import gpiozero
 import time
 import fakes
 import camera
-
+import cv2
+import util
+from vision import Landmark
 class TShirtBot:
     def __init__(self):
         self.can_manager = get_can_manager()
@@ -26,30 +28,6 @@ class TShirtBot:
 
     def refresh_ping(self, sid):
         self.last_ping[sid] = time.time()
-
-    def forward(self):
-        self.front_left.set_duty_cycle(.1)
-        self.front_right.set_duty_cycle(-.1)
-        self.back_left.set_duty_cycle(.1)
-        self.back_right.set_duty_cycle(-.1)
-
-    def backward(self):
-        self.front_left.set_duty_cycle(-.1)
-        self.front_right.set_duty_cycle(.1)
-        self.back_left.set_duty_cycle(-.1)
-        self.back_right.set_duty_cycle(.1)
-
-    def turn_left(self):
-        self.front_left.set_duty_cycle(-.1)
-        self.front_right.set_duty_cycle(-.1)
-        self.back_left.set_duty_cycle(-.1)
-        self.back_right.set_duty_cycle(-.1)
-
-    def turn_right(self):
-        self.front_left.set_duty_cycle(.1)
-        self.front_right.set_duty_cycle(.1)
-        self.back_left.set_duty_cycle(.1)
-        self.back_right.set_duty_cycle(.1)
 
     def set_shooting(self, shooting):
         self.turret.set_shooting(shooting)
@@ -84,14 +62,41 @@ class TShirtBot:
     def rotate(self):
         self.turret.revolver_motor.set_duty_cycle(.1)
 
-    def stop_turret(self):
+    def stop_tilt(self):
         self.turret.hold()
+
+    def rotate_left(self):
+        self.turret.set_pivot_power(-0.075)
+
+    def rotate_right(self):
+        self.turret.set_pivot_power(0.075)
+    
+    def stop_pivot(self):
+        self.turret.set_pivot_power(0)
+
     def manual_geneva(self, amount):
         self.turret.manual_geneva(amount)
 
     def hold(self):
         self.turret.tilter.set_duty_cycle(.05)
+    def set_auto(self, auto):
+        if auto == "none":
+            self.camera.set_vision_callback(None)
+            self.drive(0, 0)
+        elif auto == "center":
 
+            def callback(landmarks, frame):
+                
+                center = util.point_avg(landmarks[Landmark.LEFT_HIP], landmarks[Landmark.RIGHT_HIP])
+                #print(center)
+                cv2.circle(frame, [int(center.x * frame.shape[1]), int(center.y * frame.shape[0])], 5, [255,0,0])
+                error = center.x*frame.shape[1] - frame.shape[1] / 2
+                turn = util.abs_clamp(error * 0.009, -0.2, 0.2)
+                print(error)
+                self.drive(0, turn)
+
+            self.camera.set_vision_callback(callback)
+        pass
     def set_enabled(self, enabled):
         print("Enabled: ", enabled)
         if self.enabled == enabled: return
@@ -103,7 +108,10 @@ class TShirtBot:
             self.drive(0, 0)
             self.turret.disable()
             self.last_ping = {}
-        
+    def set_valve_time(self, time):
+        self.turret.shoot_config["solenoid_time"] = time
+    def get_valve_time(self):
+        return self.turret.shoot_config["solenoid_time"]
     def get_enabled(self):
         return self.enabled
     
@@ -145,7 +153,8 @@ class Turret:
     def __init__(self):
         self.auto_shooting = False
         self.relay = OutputPin(27) if fakes.is_raspberrypi() else fakes.FakeRelay()
-        self.revolver_motor = SparkMax(6)
+        self.revolver_motor = SparkMax(6) # thing running the geneva gear
+        self.pivot_motor = SparkMax(21) # thing pivoting the turret
         self.tilter = SparkMax(5)
         self.time_end_shoot = 0
         self.last_shot_time = 0
@@ -204,6 +213,8 @@ class Turret:
         self.relay.off()
         self.target_tilt = 0
         self.tilter.set_duty_cycle(0)
+        self.pivot_motor.set_duty_cycle(0)
+
     def enable(self):
         self.hold()
 
@@ -218,11 +229,18 @@ class Turret:
         self.manual_geneva_mode = amount != 0
         if amount == 0:
             self.target_barrel_rotation = self.revolver_motor.get_encoder_position()
+
     def set_tilt(self, angle):
+        """Currently this doesn't work because there is no PID config on the tilter spark"""
         self.tilter.set_position(angle)
+
     def set_tilt_power(self, power):
         self.target_tilt = 0
         self.tilter.set_duty_cycle(power)
+
+    def set_pivot_power(self, power):
+        self.pivot_motor.set_duty_cycle(power)
+
     def hold(self):
         self.target_tilt = self.tilter.get_encoder_position()
 

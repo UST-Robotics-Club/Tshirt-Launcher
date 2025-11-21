@@ -67,7 +67,7 @@ async def rotateBarrels(sid):
 async def stopTilt(sid):
     if sid not in current_drivers: return
     print("Turret Stopped")
-    robot.stop_turret()
+    robot.stop_tilt()
 
 @sio.event
 async def hold(sid):
@@ -75,6 +75,33 @@ async def hold(sid):
     print("Holding Turret")
     robot.hold()
 
+@sio.event
+async def turretLeft(sid):
+    if sid not in current_drivers: return
+    robot.rotate_left()
+
+@sio.event
+async def turretRight(sid):
+    if sid not in current_drivers: return
+    robot.rotate_right()
+
+@sio.event
+async def stopPivot(sid):
+    if sid not in current_drivers: return
+    robot.stop_pivot()
+
+@sio.event
+async def setAuto(sid, auto):
+    if sid not in current_drivers: return
+    robot.set_auto(auto)
+
+@sio.event
+async def setValveTime(sid, time):
+    if sid not in current_drivers: return
+    robot.set_valve_time(time)
+@sio.event
+async def getValveTime(sid):
+    return robot.get_valve_time()
 @sio.event
 async def frame(sid):
     return robot.get_camera_frame()

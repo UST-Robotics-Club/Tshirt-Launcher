@@ -40,6 +40,7 @@ class SparkMax(CanDevice):
         super().__init__(can_id)
         self.encoder_position = 0
         self.encoder_offset = 0
+        self.max_voltage = 12
         self.status = {}
 
     def handle_packet(self, msg: DecodedCanPacket):
@@ -58,14 +59,26 @@ class SparkMax(CanDevice):
                 #     pass
         self.status[msg.api_index] = msg.data
     def get_encoder_position(self):
-        """Get the encoder position, taking into account wherever it was last reset. Measured in rotations."""
+        """Get the encoder position, taking into account wherever it was last reset. Measured in rotations.
+            If this is always returning 0, maybe the SparkMax isn't sending status frames. Check in the REV client
+            for the Advanced option to force sending status frame 2.
+        """
         return self.encoder_position + self.encoder_offset
     def reset_encoder_position(self):
         """Make this position be reported as 0. Only does it on this software side, not by sending a command to the Spark """
         self.encoder_offset = -self.encoder_position
+        
     def set_duty_cycle(self, percent):
         """Percent should be between -1 and 1"""
         self.send_control_frame(ControlMode.Duty_Cycle_Set, percent)
+
+    def set_proportion_volts(self, proportion):
+        """Set the output of the spark in volts, as a proportion of the configured max voltage (default 12v)"""
+        self.send_control_frame(ControlMode.Voltage_Set, self.max_voltage * proportion)
+
+    def set_max_voltage(self, volts):
+        """Sets the reference voltage that will be used in set_proportion_volts"""
+        self.max_voltage = volts
 
     def set_position(self, position):
         """Position is expressed in rotations"""

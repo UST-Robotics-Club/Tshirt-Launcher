@@ -41,14 +41,14 @@ let enableBtnLabel = document.getElementById("enable-label");
 let disableBtnLabel = document.getElementById("disable-label");
 let disableBtn = document.getElementById("disable");
 let shootBtn = document.getElementById("shoot");
-let forwardBtn = document.getElementById("forward");
-let backwardBtn = document.getElementById("backward");
-let leftBtn = document.getElementById("left");
-let rightBtn = document.getElementById("right");
+let leftBtn = document.getElementById("turret-left");
+let rightBtn = document.getElementById("turret-right");
 let tiltUpBtn = document.getElementById("tilt-up");
 let tiltDownBtn = document.getElementById("tilt-down");
 let rotateBtn = document.getElementById("rotate");
-let holdTurretBtn = document.getElementById("hold");
+let lockOn = document.getElementById("lock-on");
+let saveButton = document.getElementById("save-settings");
+let valveTime = document.getElementById("valve-time");
 let modeSelect = document.getElementById("mode-select");
 let pingHistory = [];
 function doPing() {
@@ -104,10 +104,7 @@ enableBtnLabel.addEventListener("pointerdown", function (e) {
     socket.emit("enable");
     doPing();
 });
-holdTurretBtn.addEventListener("click", function (e) {
-    e.preventDefault();
-    socket.emit("hold");
-});
+
 // pointerEventHandlers(shootBtn, function(e) {
 //     e.preventDefault();
 //     if (document.getElementById("shoot-safety").checked) {
@@ -140,6 +137,20 @@ pointerEventHandlers(tiltDownBtn, function (e) {
     e.preventDefault();
     socket.emit("stopTilt");
 });
+pointerEventHandlers(leftBtn, function (e) {
+    e.preventDefault();
+    socket.emit("turretLeft");
+}, function (e) {
+    e.preventDefault();
+    socket.emit("stopPivot");
+});
+pointerEventHandlers(rightBtn, function (e) {
+    e.preventDefault();
+    socket.emit("turretRight");
+}, function (e) {
+    e.preventDefault();
+    socket.emit("stopPivot");
+});
 pointerEventHandlers(rotateBtn, function (e) {
     e.preventDefault();
     socket.emit("manualGeneva", 0.1);
@@ -147,6 +158,20 @@ pointerEventHandlers(rotateBtn, function (e) {
     e.preventDefault();
     socket.emit("manualGeneva", 0);
 });
+pointerEventHandlers(lockOn, function (e) {
+    e.preventDefault();
+    socket.emit("setAuto", "center");
+}, function (e) {
+    e.preventDefault();
+    socket.emit("setAuto", "none");
+});
+pointerEventHandlers(saveButton, function (e) {
+    e.preventDefault();
+    socket.emit("setValveTime", parseFloat(valveTime.value));
+}, function (e) {
+    e.preventDefault();
+});
+
 document.ondblclick = function (e) {
     e.preventDefault();
 }
@@ -154,47 +179,11 @@ modeSelect.addEventListener("change", function (e) {
     document.body.classList.remove("show-1", "show-2", "show-3");
     document.body.classList.add("show-" + this.value);
     socket.emit("drive", 0, 0);
-});
-forwardBtn.addEventListener("mousedown", function (e) {
-    e.preventDefault();
-    socket.emit("forward");
-});
-backwardBtn.addEventListener("mousedown", function (e) {
-    e.preventDefault();
-    socket.emit("backward");
-});
-leftBtn.addEventListener("mousedown", function (e) {
-    e.preventDefault();
-    socket.emit("left");
-});
-rightBtn.addEventListener("mousedown", function (e) {
-    e.preventDefault();
-    socket.emit("right");
-});
-forwardBtn.addEventListener("mouseup", function (e) {
-    e.preventDefault();
-    socket.emit("stop");
-});
-backwardBtn.addEventListener("mouseup", function (e) {
-    e.preventDefault();
-    socket.emit("stop");
-});
-leftBtn.addEventListener("mouseup", function (e) {
-    e.preventDefault();
-    socket.emit("stop");
-});
-rightBtn.addEventListener("mouseup", function (e) {
-    e.preventDefault();
-    socket.emit("stop");
-});
-rotateBtn.addEventListener("mousedown", function (e) {
-    e.preventDefault();
-    socket.emit("rotateBarrels");
-});
-
-rotateBtn.addEventListener("mouseup", function (e) {
-    e.preventDefault();
-    socket.emit("stopTilt");
+    if(this.value == "3") {
+        socket.emit("getValveTime", function(t) {
+            valveTime.value = t;
+        });
+    }
 });
 
 let joystickInner = document.getElementById("joystick-inner");
