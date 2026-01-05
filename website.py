@@ -1,5 +1,5 @@
 import robotcore
-
+import time
 import socketio
 from aiohttp import web
 
@@ -9,16 +9,14 @@ current_drivers = []
 
 @sio.event
 async def connect(sid, environ):
-    """Handle client connection."""
     print(f"Client connected: {sid}")
 
 @sio.event
 async def disconnect(sid):
     global current_drivers
-    if sid in current_drivers:
+    if sid in current_drivers and not robot.get_unstable_mode():
         robot.set_enabled(False)
         current_drivers = []
-    """Handle client disconnection."""
     print(f"Client disconnected: {sid}")
 
 @sio.event
@@ -28,67 +26,87 @@ async def shoot(sid, sec):
     robot.pulse_shoot(sec)
 
 @sio.event
-async def autoshoot(sid, autoshoot):
+async def autoshoot(sid, autoshoot, time):
     if sid not in current_drivers: return
-    robot.set_shooting(autoshoot)
+    if robot.get_unstable_mode():
+        robot.unstable_controller.set_shooting(autoshoot, time)
+    else:
+        robot.set_shooting(autoshoot)
 
 @sio.event
-async def drive(sid, forward, rotate):
+async def drive(sid, forward, rotate, time):
     if sid not in current_drivers: return
-    robot.drive(forward, rotate)
+    if robot.get_unstable_mode():
+        robot.unstable_controller.set_drive(forward, rotate, time)
+    else:
+        robot.drive(forward, rotate)
 
 @sio.event
-async def stop(sid):
+async def stop(sid, time):
     if sid not in current_drivers: return
     print("Stop Driving!")
     robot.drive(0, 0)
+    robot.unstable_controller.set_drive(0, 0, time.time())
     
 @sio.event
-async def tiltUp(sid):
+async def tiltUp(sid, time):
     if sid not in current_drivers: return
     print("Tilting Up!")
-    robot.tilt_up()
+    if robot.get_unstable_mode():
+        robot.unstable_controller.set_tilt(-0.1, time)
+    else:
+        robot.tilt_up()
 @sio.event
-async def tiltDown(sid):
+async def tiltDown(sid, time):
     if sid not in current_drivers: return
     print("Tilting Down!")
-    robot.tilt_down()
+    if robot.get_unstable_mode():
+        robot.unstable_controller.set_tilt(0.05, time)
+    else:
+        robot.tilt_down()
 @sio.event
-async def manualGeneva(sid, amount):
+async def manualGeneva(sid, amount, time):
     if sid not in current_drivers: return
-    robot.manual_geneva(amount)
+    if robot.get_unstable_mode():
+        robot.unstable_controller.geneva.set(amount, time)
+    else:
+        robot.manual_geneva(amount)
 
 @sio.event
-async def rotateBarrels(sid):
-    if sid not in current_drivers: return
-    print("Barrels Be Rotating!")
-    robot.rotate()
-@sio.event
-async def stopTilt(sid):
+async def stopTilt(sid, _):
     if sid not in current_drivers: return
     print("Turret Stopped")
     robot.stop_tilt()
+    robot.unstable_controller.set_tilt(0, time.time())
 
 @sio.event
-async def hold(sid):
+async def hold(sid, time):
     if sid not in current_drivers: return
     print("Holding Turret")
     robot.hold()
+    robot.unstable_controller.set_tilt(0, time.time())
 
 @sio.event
-async def turretLeft(sid):
+async def turretLeft(sid, time):
     if sid not in current_drivers: return
-    robot.rotate_left()
+    if robot.get_unstable_mode():
+        robot.unstable_controller.set_turret_turn(-0.075, time)
+    else:
+        robot.rotate_left()
 
 @sio.event
-async def turretRight(sid):
+async def turretRight(sid, time):
     if sid not in current_drivers: return
-    robot.rotate_right()
+    if robot.get_unstable_mode():
+        robot.unstable_controller.set_turret_turn(0.075, time)
+    else:
+        robot.rotate_right()
 
 @sio.event
-async def stopPivot(sid):
+async def stopPivot(sid, _):
     if sid not in current_drivers: return
     robot.stop_pivot()
+    robot.unstable_controller.set_turret_turn(0, time.time())
 
 @sio.event
 async def setAuto(sid, auto):
@@ -102,6 +120,9 @@ async def setValveTime(sid, time):
 @sio.event
 async def getValveTime(sid):
     return robot.get_valve_time()
+@sio.event
+async def setUnstableMode(sid, unstable):
+    robot.set_unstable_mode(unstable)
 @sio.event
 async def frame(sid):
     return robot.get_camera_frame()

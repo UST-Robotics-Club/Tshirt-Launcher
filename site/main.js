@@ -11,32 +11,10 @@ function pointerEventHandlers(element, onDown, onUp) {
 function clamp(x, min, max) {
     return Math.min(max, Math.max(min, x));
 }
-document.getElementById("speed1").addEventListener("input", function () {
-    socket.emit("spin2", parseFloat(this.value) / 10.0)
-});
-document.getElementById("speed2").addEventListener("input", function () {
-    socket.emit("spin1", parseFloat(this.value) / 10.0)
-});
-function stop() {
-    socket.emit("spin1", 0);
-    socket.emit("spin2", 0);
 
-    document.getElementById("speed1").value = 0;
-    document.getElementById("speed2").value = 0;
 
-}
-window.addEventListener("touchend", stop);
-window.addEventListener("mouseup", stop);
-window.addEventListener("touchcancel", stop);
-let tilting = false;
-function handleOrientation(event) {
-    const alpha = event.alpha;
-    const beta = event.beta;
-    const gamma = event.gamma;
-    let val = Math.max(Math.min(100, beta), -100)
-    socket.emit("spin", val);
-}
 let enableBtn = document.getElementById("enable");
+let unstableSwitch = document.getElementById("unstable-switch");
 let enableBtnLabel = document.getElementById("enable-label");
 let disableBtnLabel = document.getElementById("disable-label");
 let disableBtn = document.getElementById("disable");
@@ -51,13 +29,29 @@ let saveButton = document.getElementById("save-settings");
 let valveTime = document.getElementById("valve-time");
 let modeSelect = document.getElementById("mode-select");
 let pingHistory = [];
+let timeOffset = Number.MAX_SAFE_INTEGER;
+function getForeignTime() {
+    // get the time according to the robot
+    return (Date.now() + timeOffset) / 1000;
+}
+function isUnstable() {
+    return unstableSwitch.checked;
+}
 function doPing() {
     let start = Date.now();
     socket.emit("ping", function (status) {
         let enabled = status[1][0];
-        let amDriving = status[0].includes(socket.id);
+        let serverTime = status[1][1] * 1000;
+        unstableSwitch.checked = status[1][2];
         let now = Date.now();
-        pingHistory.unshift(now - start);
+        let thisPing = now - start;
+        let timeDiff = serverTime - start;
+        if(Math.abs(timeDiff) < Math.abs(timeOffset)) {
+            // Lowest time diff is probably most accurate
+            timeOffset = timeDiff;
+        }
+        let amDriving = status[0].includes(socket.id);
+        pingHistory.unshift(thisPing);
         pingHistory = pingHistory.slice(0, 6);
         document.getElementById("ping").innerHTML = pingHistory.join("<br>");
         if (enabled) {
@@ -74,20 +68,57 @@ function doPing() {
             disableBtn.checked = true;
             enableBtn.checked = false;
             document.body.classList.remove("control-enabled");
+            document.body.classList.remove("control-enabled");
+            document.body.classList.remove("enabled-not-driving");
+
         }
     })
 }
+let waitingForFrame = false;
+let lastFrameTime = 0;
 function getCameraFrame() {
+    if (waitingForFrame) return; // prevent multiple frame getting loops
+    waitingForFrame = true;
     socket.emit("frame", function (data) {
+        waitingForFrame = false;
         const mimeType = 'image/jpeg';
         const blob = new Blob([data], { type: mimeType });
         const imageUrl = URL.createObjectURL(blob);
         document.getElementById("camera").src = imageUrl;
         setTimeout(getCameraFrame, 16);
-    })
+        lastFrameTime = Date.now();
+    });
 }
+setInterval(function () {
+    if (waitingForFrame && (Date.now() - lastFrameTime) > 3000) {
+        waitingForFrame = false;
+        getCameraFrame();
+    }
+}, 3000);
 setInterval(doPing, 100);
 getCameraFrame();
+
+let periodicSends = {};
+function sendInput(category, message, ...values) {
+    socket.emit(message, ...[...values, getForeignTime()]);
+    if(isUnstable()) {
+        periodicSends[category] = [message, values];
+    }
+}
+function clearInput(category) {
+    delete periodicSends[category];
+}
+setInterval(function () {
+    // This resends inputs during unstable mode to confirm continued input
+    // If the robot doesn't receive something after 150ms, it will slow down over 100ms.
+    if (isUnstable()) {
+        for(let cat in periodicSends) {
+            let entry = periodicSends[cat];
+            socket.emit(entry[0], ...[...entry[1], getForeignTime()]);
+        }
+    }
+}, 100);
+
 socket.on("connect", function () {
     document.getElementById("control-card").classList.remove("disconnected");
 });
@@ -104,6 +135,11 @@ enableBtnLabel.addEventListener("pointerdown", function (e) {
     socket.emit("enable");
     doPing();
 });
+unstableSwitch.addEventListener("change", function (e) {
+    e.preventDefault();
+    socket.emit("setUnstableMode", isUnstable());
+    periodicSends = {};
+});
 
 // pointerEventHandlers(shootBtn, function(e) {
 //     e.preventDefault();
@@ -117,46 +153,52 @@ enableBtnLabel.addEventListener("pointerdown", function (e) {
 pointerEventHandlers(shootBtn, function (e) {
     e.preventDefault();
     if (document.getElementById("shoot-safety").checked) {
-        socket.emit("autoshoot", true);
+        sendInput("shoot", "autoshoot", true);
     }
 }, function (e) {
     e.preventDefault();
-    socket.emit("autoshoot", false);
+    sendInput("shoot", "autoshoot", false);
+    clearInput("shoot");
 });
 pointerEventHandlers(tiltUpBtn, function (e) {
     e.preventDefault();
-    socket.emit("tiltUp");
+    sendInput("tilt", "tiltUp");
 }, function (e) {
     e.preventDefault();
-    socket.emit("stopTilt");
+    sendInput("tilt", "stopTilt");
+    clearInput("tilt");
 });
 pointerEventHandlers(tiltDownBtn, function (e) {
     e.preventDefault();
-    socket.emit("tiltDown");
+    sendInput("tilt", "tiltDown");
 }, function (e) {
     e.preventDefault();
-    socket.emit("stopTilt");
+    sendInput("tilt", "stopTilt");
+    clearInput("tilt");
 });
 pointerEventHandlers(leftBtn, function (e) {
     e.preventDefault();
-    socket.emit("turretLeft");
+    sendInput("pivot", "turretLeft");
 }, function (e) {
     e.preventDefault();
-    socket.emit("stopPivot");
+    sendInput("pivot", "stopPivot");
+    clearInput("pivot");
 });
 pointerEventHandlers(rightBtn, function (e) {
     e.preventDefault();
-    socket.emit("turretRight");
+    sendInput("pivot", "turretRight");
 }, function (e) {
     e.preventDefault();
-    socket.emit("stopPivot");
+    sendInput("pivot", "stopPivot");
+    clearInput("pivot");
 });
 pointerEventHandlers(rotateBtn, function (e) {
     e.preventDefault();
-    socket.emit("manualGeneva", 0.1);
+    sendInput("geneva", "manualGeneva", 0.1);
 }, function (e) {
     e.preventDefault();
-    socket.emit("manualGeneva", 0);
+    sendInput("geneva", "manualGeneva", 0);
+    clearInput("geneva");
 });
 pointerEventHandlers(lockOn, function (e) {
     e.preventDefault();
@@ -178,7 +220,8 @@ document.ondblclick = function (e) {
 modeSelect.addEventListener("change", function (e) {
     document.body.classList.remove("show-1", "show-2", "show-3");
     document.body.classList.add("show-" + this.value);
-    socket.emit("drive", 0, 0);
+    sendInput("drive", "drive", 0, 0);
+    periodicSends = {};
     if(this.value == "3") {
         socket.emit("getValveTime", function(t) {
             valveTime.value = t;
@@ -192,7 +235,8 @@ let forwardStick = document.getElementById("forward-stick");
 let rotateStick = document.getElementById("rotate-stick");
 let driveControlSection = document.getElementById("drive-controls");
 let joystickId = false;
-
+let currDriveRot = 0;
+let currDriveForward = 0;
 pointerEventHandlers(joystickInner, function (e) {
     e.preventDefault();
     joystickId = e.pointerId;
@@ -207,33 +251,39 @@ pointerEventHandlers(joystickInner, function (e) {
         joystickInner.style.position = "relative";
         joystickInner.style.top = "60px";
         joystickInner.style.left = "60px";
-        socket.emit("drive", 0, 0);
+        sendInput("drive", "drive", 0, 0);
+        clearInput("drive");
     }
 });
 pointerEventHandlers(forwardStick, function (e) {
     forwardStick.classList.add("stick-active");
 }, function (e) {
     forwardStick.value = 0;
-    updateDriving();
+    updateTwoSliderDriving();
     forwardStick.classList.remove("stick-active");
 });
 pointerEventHandlers(rotateStick, function (e) {
     rotateStick.classList.add("stick-active");
 }, function (e) {
     rotateStick.value = 0;
-    updateDriving();
+    updateTwoSliderDriving();
     forwardStick.classList.remove("stick-active");
 });
-function updateDriving() {
+function updateTwoSliderDriving() {
     let throttle = (document.getElementById("throttle").value / 100);
     let turnThrottle = Math.min(throttle, 0.25);
-    socket.emit("drive", forwardStick.value / 100 * throttle, rotateStick.value / 100 * turnThrottle);
+    let forward = forwardStick.value / 100 * throttle;
+    let rotate = rotateStick.value / 100 * turnThrottle;
+    sendInput("drive", "drive", forward, rotate);
+    if(rotate === 0 && forward === 0) {
+        clearInput("drive");
+    }
 }
 forwardStick.addEventListener("input", function () {
-    updateDriving();
+    updateTwoSliderDriving();
 });
 rotateStick.addEventListener("input", function () {
-    updateDriving();
+    updateTwoSliderDriving();
 });
 document.addEventListener("pointermove", function (e) {
     if (e.pointerId === joystickId) {
@@ -251,7 +301,6 @@ document.addEventListener("pointermove", function (e) {
         dy = clamp(dy, -maxDist, maxDist);
         dx = clamp(dx, -maxDist, maxDist);
 
-        // Constrain to within maxDist px of the center
         innerJoystickCenterX = cx + dx;
         innerJoystickCenterY = cy + dy;
 
@@ -259,6 +308,9 @@ document.addEventListener("pointermove", function (e) {
         joystickInner.style.top = innerJoystickCenterY - driveControlRect.top + "px";
 
         let throttle = (document.getElementById("throttle").value / 100);
-        socket.emit("drive", -Math.pow(dy / maxDist, 2) * throttle * Math.sign(dy), Math.pow(dx / maxDist, 2) * throttle * Math.sign(dx));
+        // Square the inputs so we can get finer control without losing highest speed
+        currDriveForward = -Math.pow(dy / maxDist, 2) * throttle * Math.sign(dy);
+        currDriveRot = Math.pow(dx / maxDist, 2) * throttle * Math.sign(dx);
+        sendInput("drive", "drive", currDriveForward, currDriveRot);
     }
 });

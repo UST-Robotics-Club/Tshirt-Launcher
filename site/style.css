@@ -11,13 +11,20 @@
 .control-enabled #controls-row {
 	display: flex;
 }
+.control-enabled #unstable-label {
+	display: inline-block!important;
+	margin-top: 0!important;
+}
+.control-enabled #unstable-switch{
+	display: inline-block;
+}
 
 #speed1, #speed2 {
 	width: 90vw;
 	height:100px;
 }
 #enabled-group {
-	height: 200px;
+	height: 150px;
 	width: 300px;
 	min-height: 100px;
 	min-width: fit-content;
@@ -69,6 +76,7 @@
 }
 .enabled-not-driving #enable-message{
 	display:block;
+	background-color: cyan;
 }
 .shadow {
 	--bs-box-shadow: 0 1rem 1rem rgba(0, 0, 0, 0.15);

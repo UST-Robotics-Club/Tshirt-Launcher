@@ -142,7 +142,3 @@ class Landmark:
     RIGHT_HEEL = 30
     LEFT_FOOT_INDEX = 31
     RIGHT_FOOT_INDEX = 32
-
-
-if __name__ == "__main__":
-    main()

@@ -42,8 +42,10 @@
                                 <select id="mode-select" class="dropdown">
                                     <option value="1">Two Slider</option>
                                     <option value="2">Hybrid</option>
-                                    <option value="3">Turret</option>
+                                    <option value="3">Advanced</option>
                                 </select>
+                                <label class="d-inline-block mt-3" id="unstable-label" for="unstable-switch">Unstable Connection Mode</label>
+                                <input class="form-check-input" type="checkbox" role="switch" id="unstable-switch">
                             </div>
                         </div>
                     </div>
@@ -66,7 +68,6 @@
                     <input type="number" id="valve-time">
                     <br>
                     <button class="btn btn-primary" id="save-settings">Save</button>
-                    <button class="btn btn-primary" id="stop-camera">StopCam</button>
 
                 </div>
             </div>
@@ -83,12 +84,12 @@
                 </div>
                 <div id="updown-box" class="show-for-2">
                     <button id="tilt-up" class="d-block btn btn-primary adjust-btn">&uparrow;</button>
-                    <div id="tilt-text">1900</div>
+                    <div id="tilt-text">Pitch</div>
                     <button id="tilt-down" class="d-block btn btn-primary adjust-btn">&downarrow;</button>
                 </div>
                 <div id="leftright-box" class="show-for-2">
                     <button id="turret-left" class="btn btn-primary adjust-btn">&larr;</button>
-                    <div id="rotate-text">2000</div>
+                    <div id="rotate-text">Yaw</div>
                     <button id="turret-right" class="btn btn-primary adjust-btn">&rarr;</button>
                 </div>
                 <button class="btn btn-primary show-for-3" id="rotate">Rotate Barrels</button>

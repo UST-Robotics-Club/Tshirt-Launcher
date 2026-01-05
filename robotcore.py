@@ -5,6 +5,7 @@ import time
 import fakes
 import camera
 import cv2
+from unstablecontroller import UnstableController
 import util
 from vision import Landmark
 class TShirtBot:
@@ -16,12 +17,14 @@ class TShirtBot:
         self.back_right = SparkMax(15)
         #self.test_spark = SparkMax(16)
         self.enabled = False
+        self.unstable = False
         self.last_ping = {}
         self.is_killed = False
         self.turret = Turret()
         self.requested_left = 0
         self.requested_right = 0
         self.camera = camera.RoboCamera()
+        self.unstable_controller = UnstableController(self)
 
     def kill_thread(self):
         self.is_killed = True
@@ -110,21 +113,36 @@ class TShirtBot:
             self.last_ping = {}
     def set_valve_time(self, time):
         self.turret.shoot_config["solenoid_time"] = time
+    def set_unstable_mode(self, unstable):
+        self.unstable_controller.reset()
+        self.unstable = unstable
+        if unstable:
+            self.camera.set_quality(20)
+        else:
+            self.camera.set_quality(80)
+    def get_unstable_mode(self):
+        return self.unstable
     def get_valve_time(self):
         return self.turret.shoot_config["solenoid_time"]
     def get_enabled(self):
         return self.enabled
     
     def get_status_info(self):
-        """Return whatever should be sent to the frontend every 0.1 sec"""
-        return [self.get_enabled()]
+        """Return whatever should be sent to the frontend every 0.1 sec.
+        In this case it is enabled, current time, unstable"""
+        return [self.get_enabled(), time.time(), self.unstable]
     
     def tick(self):
         now = time.time()
-        for ping in self.last_ping.values():
-            if now - ping > 1 and self.enabled:
-                self.set_enabled(False)
+        if self.unstable:
+            self.unstable_controller.tick()
+        else:
+            for ping in self.last_ping.values():
+                if now - ping > 1 and self.enabled:
+                    self.set_enabled(False)
         if self.enabled:
+            #stars = int(self.requested_left * 40)
+            #print("\r"+str("*"*stars + "-"*(40-stars)), end="\n")
             self.front_left.set_duty_cycle(self.requested_left)
             self.back_left.set_duty_cycle(self.requested_left)
 
@@ -137,7 +155,7 @@ class TShirtBot:
         time.sleep(0.02)
 
     def get_camera_frame(self):
-        return self.camera.get_b64()
+        return self.camera.get_bytes()
     
     def main_loop(self):
         self.can_manager.start_thread()
@@ -165,7 +183,7 @@ class Turret:
         self.manual_geneva_mode = False
         self.shoot_config = {
             "cooldown": 2, # 0 is for fast mode, 2 for normal mode
-            "solenoid_time": 0.2, # seconds, 0.2 or 0.3 seems sufficient (doesn't significantly change shooting rate).
+            "solenoid_time": 0.1, # seconds, 0.2 or 0.3 seems sufficient (doesn't significantly change shooting rate).
             "geneva_speed": 0.2 # 0.4 is for "fast mode", 0.2 for normal mode
         }
     
@@ -191,7 +209,7 @@ class Turret:
                     self.target_barrel_rotation = self.revolver_motor.get_encoder_position() + 20
                 else:
                     self.target_barrel_rotation = self.target_barrel_rotation + 20
-        if self.target_barrel_rotation > self.revolver_motor.get_encoder_position():
+        if self.target_barrel_rotation > self.revolver_motor.get_encoder_position() and 0:
             if not self.manual_geneva_mode:
                 self.revolver_motor.set_duty_cycle(self.shoot_config["geneva_speed"])
         else:
